@@ -3,23 +3,82 @@
 .main {
     width: 100vw;
     height: 100vh;
-    padding: 10px 16px;
     background-color: lightgray;
+    display: flex;
+    flex-direction: column;
 }
 
 .action-row {
     width: 100%;
     display: flex;
     flex-direction: row-reverse;
+    padding: 10px 15px;
+    background-color: #212529;
+    box-shadow: rgba(0, 0, 0, 0.35) 0 5px 15px;
 }
 
-.action-container {
+#name-form {
     width: 100%;
     display: flex;
 }
-
 @media screen and (min-width: 768px) {
-    .action-container {
+    #name-form {
         max-width: 720px;
     }
+}
+
+#thread-container {
+    flex: 1;
+    padding: 20px 15px 0 15px;
+    overflow: auto;
+}
+
+.thread {
+    margin-bottom: 20px;
+}
+
+.thread-header {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+.thread-header > h6 {
+    padding-top: 0.63em;
+}
+
+.thread-delete {
+    margin-left: auto;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+}
+
+.comment {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    margin-bottom: 1em;
+}
+.comment > small {
+    padding-top: 0.27em;
+}
+.comment:last-child {
+    margin-bottom: 1.5rem !important;
+}
+
+.thread-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.comment-form {
+    width: 100%;
+}
+
+.comment-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
 }
