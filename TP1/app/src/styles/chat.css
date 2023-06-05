@@ -1,0 +1,25 @@
+@import "styles.css";
+
+.main {
+    width: 100vw;
+    height: 100vh;
+    padding: 10px 16px;
+    background-color: lightgray;
+}
+
+.action-row {
+    width: 100%;
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.action-container {
+    width: 100%;
+    display: flex;
+}
+
+@media screen and (min-width: 768px) {
+    .action-container {
+        max-width: 720px;
+    }
+}
