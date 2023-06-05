@@ -26,6 +26,10 @@ $(document).ready(() => {
     hideForm();
   });
 
+  addThread('Bienvenue')
+    .addComment('Cliquez sur le "+" en haut \u00E0 droite pour ajouter une demande.')
+    .addComment('Cliquez sur "Ajouter un commentaire" pour ajouter un commentaire.')
+    .addComment('Cliquez sur la poubelle pour supprimer cet exemple.');
 });
 
 showForm = () => {
@@ -41,12 +45,10 @@ hideForm = () => {
 
 addThread = (name) => {
   const thread = $(buildThread(name));
-  thread.find('.thread-delete').click(() => {
-    thread.remove();
-  })
   const form = thread.find('.comment-form');
   const input = form.find('.comment-input');
   const addBtn = thread.find('.comment-add');
+  const deleteBtn = thread.find('.thread-delete');
   const cancelBtn = form.find('.comment-cancel');
   const confirmBtn = form.find('.comment-confirm');
 
@@ -62,6 +64,10 @@ addThread = (name) => {
 
   addBtn.click(() => {
     showCommentForm();
+  })
+
+  deleteBtn.click(() => {
+    thread.remove();
   })
 
   cancelBtn.click(() => {
@@ -81,6 +87,15 @@ addThread = (name) => {
   });
 
   $('#thread-container').append(thread);
+
+  let res = {
+    addComment: (text) => {
+      const comment = $(buildComment(text));
+      thread.find('.comment-container').append(comment);
+      return res;
+    }
+  }
+  return res;
 }
 
 buildThread = (name) => `<div class="thread card shadow-sm">
