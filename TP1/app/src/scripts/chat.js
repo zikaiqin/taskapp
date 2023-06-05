@@ -1,4 +1,6 @@
 $(document).ready(() => {
+  const nameField = $('#name-input');
+
   $('#name-add').click(() => {
     showForm();
   });
@@ -7,17 +9,17 @@ $(document).ready(() => {
     const form = $('#name-form');
     if (!form[0].checkValidity()) {
       form.addClass('was-validated');
-      $('#name-input').focus();
+      nameField.focus();
       return;
     }
-    const name = $('#name-input').val();
+    const name = nameField.val();
     addThread(name);
     hideForm();
   });
 
   $('#name-reset').click(() => {
     $('#name-form').removeClass('was-validated');
-    $('#name-input').focus();
+    nameField.focus();
   });
 
   $('#name-cancel').click(() => {
