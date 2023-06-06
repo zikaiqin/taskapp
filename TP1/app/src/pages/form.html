@@ -4,8 +4,70 @@
 <head>
     <meta charset="UTF-8">
     <title>Exercice 1</title>
+    <link rel="stylesheet" href="../styles/form.css">
 </head>
 <body>
+    <div class="grid-container">
+        <div class="en-tete">
+            <br>Bienvenu,<br>Voici le rendu de l'Exercice 1:
+        </div>
+        <div class="barre-de-nav">Barre de navigation :
+            <p> + Pikachu</p>
+            <p> + Falbala</p>
+            <p> + Naruto</p>
+            <p> + Monkey D. Luffy</p>
+            <p> + Homer Simpson</p>
+            <p> + Jesus Christ</p>
+            <p> + Mario</p>
+            <p> + Martin Luther King</p>
+            <p> + Supertamp</p>
+            <p> + Donald</p>
+            <p> + Fred again...</p>
+            <p> + To be, or not to be</p>
 
+        </div>
+        <div class="contenu">
+            <form>
+                <p>
+                    <label for="lastName">Nom:</label>
+                    <input id="lastName" type="text" autocomplete="family-name" required>
+                </p>
+                <p>
+                    <label for="firstName">Prénom:</label>
+                    <input id="firstName" type="text" autocomplete="given-name" required>
+                </p>
+                <p>
+                    <label for="email">Courriel:</label>
+                    <input id="email" type="email" autocomplete="on" required>        
+                </p>           
+                <p>
+                    <label for="dob">Date de naissance:</label>
+                    <input id="dob" type="date" onchange="calculateAge(this.value)" required><br>
+                    <output id="age"></output>
+                </p>
+                <p>
+                    <label for="adresse">Adresse:</label>
+                    <input type="text" id="adresse" autocomplete="address-line1" required><br>
+                </p>
+                <p>                    
+                    <label for="codepostal">Code Postal:</label>
+                    <input type="text" id="codepostal" pattern="[0-9A-Z]{6}" title="Le code postal doit comporter 6 caractères (chiffres ou lettres majuscules)" autocomplete="postal-code" required><br>
+                </p>
+                <div>
+                    <input type="submit" id="submit" value="Envoyer">
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        function calculateAge(date) {
+            const now = new Date();
+            const dob = new Date(date);
+            const diff = Math.abs(now - dob);
+            const age = Math.floor(diff / (1000 * 60 * 60 * 24 * 365)); 
+            document.getElementById('age').innerHTML = "Âge: " + age;
+
+        }
+      </script>
 </body>
 </html>
