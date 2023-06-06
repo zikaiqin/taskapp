@@ -1,0 +1,52 @@
+@import "styles.css";
+
+
+
+.grid-container {
+    width: 98vw;
+    height: 98vh;
+    display: grid;
+    grid-template-areas:
+    "header header header header header"
+    "sidebar content content content content";
+}
+
+
+.en-tete {
+    grid-area: header;
+    background-color: whitesmoke;
+}
+
+.barre-de-nav {
+    grid-area: sidebar;
+    background-color:antiquewhite;
+}
+.contenu {
+    grid-area: content;
+}
+
+form{
+    margin: 20%;
+}
+
+form :nth-child(2n) {
+    background-color: whitesmoke;
+}
+
+div {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    font-size:x-large;
+    text-align: center;
+}
+
+p {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    font-size:large;
+    text-align: left;
+}
+
+button {
+    text-align: center;
+}
