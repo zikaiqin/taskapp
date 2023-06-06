@@ -1,7 +1,6 @@
 @import "styles.css";
 
 
-
 .grid-container {
     width: 98vw;
     height: 98vh;
@@ -10,7 +9,6 @@
     "header header header header header"
     "sidebar content content content content";
 }
-
 
 .en-tete {
     grid-area: header;
@@ -21,6 +19,7 @@
     grid-area: sidebar;
     background-color:antiquewhite;
 }
+
 .contenu {
     grid-area: content;
 }
