@@ -26,7 +26,7 @@ $(document).ready(() => {
     hideForm();
   });
 
-  addThread('Bienvenue')
+  addThread('Bienvenue sur la page de l\'exercice 2!')
     .addComment('Cliquez sur le "+" en haut \u00E0 droite pour ajouter une demande.')
     .addComment('Cliquez sur "Ajouter un commentaire" pour ajouter un commentaire.')
     .addComment('Cliquez sur la poubelle pour supprimer cet exemple.');

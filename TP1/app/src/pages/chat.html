@@ -15,27 +15,27 @@
     <link rel="stylesheet" href="../styles/chat.css">
 </head>
 <body>
-    <div class="main">
-        <div class="action-row">
-            <button type="button" id="name-add" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i>
-            </button>
-            <form id="name-form" class="needs-validation" novalidate style="display: none">
-                <div class="input-group mr-2">
-                    <input type="text" id="name-input" class="form-control" placeholder="Entrez votre nom" required>
-                    <div class="input-group-append">
-                        <button type="reset" id="name-reset" class="btn btn-secondary">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
+<div class="main">
+    <div class="action-row">
+        <button type="button" id="name-add" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+        <form id="name-form" class="needs-validation" novalidate style="display: none">
+            <div class="input-group mr-2">
+                <input type="text" id="name-input" class="form-control" placeholder="Entrez votre nom" required>
+                <div class="input-group-append">
+                    <button type="reset" id="name-reset" class="btn btn-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
                 </div>
-                <button type="button" id="name-cancel" class="btn btn-danger mr-2">Annuler</button>
-                <button type="button" id="name-confirm" class="btn btn-primary">Confirmer</button>
-            </form>
-        </div>
-        <div id="thread-container" class="container-fluid">
-        </div>
+            </div>
+            <button type="button" id="name-cancel" class="btn btn-danger mr-2">Annuler</button>
+            <button type="button" id="name-confirm" class="btn btn-primary">Confirmer</button>
+        </form>
     </div>
-    <script src="../scripts/chat.js"></script>
+    <div id="thread-container" class="container-fluid">
+    </div>
+</div>
+<script src="../scripts/chat.js"></script>
 </body>
 </html>
