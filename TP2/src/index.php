@@ -1,23 +1,27 @@
 <?php
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
+require_once 'util/url.php';
+require_once 'util/globals.php';
 require_once 'actions/router.php';
 require_once 'views/router.php';
 use Api\Router as ApiRouter;
 use View\Router as ViewRouter;
 
-try {
-    $full_path = parse_url(trim($_SERVER['REQUEST_URI'], '/'))['path'];
-    if (empty($full_path)) {
-        throw new Exception('Malformed url');
-    }
+function response() {
+    $base_path = get_url(__DIR__);
+    set_global('BASE_URL', $base_path);
+    $path_arr = explode('/', trim(str_replace($base_path, '', $_SERVER['REQUEST_URI']), '/'));
 
-    $trimmed_path = array_slice(explode('/', $full_path), 2);
-    if (isset($trimmed_path[0]) && $trimmed_path[0] === 'api') {
-        ApiRouter::dispatch(array_slice($trimmed_path, 1));
+    if (isset($path_arr[0]) && $path_arr[0] === 'api') {
+        ApiRouter::dispatch(array_slice($path_arr, 1));
     } else {
-        ViewRouter::dispatch($trimmed_path);
+        ViewRouter::dispatch($path_arr);
     }
+}
+
+try {
+    response();
 } catch(Exception $e) {
     die($e->getMessage());
 }

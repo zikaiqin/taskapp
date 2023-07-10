@@ -4,7 +4,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
 class Router {
     private function __construct() {}
-    public static function dispatch($path_arr) {
+    public static function dispatch(array $path_arr) {
         header('Content-Type: application/json');
 
         if (count($path_arr) <= 0) {
