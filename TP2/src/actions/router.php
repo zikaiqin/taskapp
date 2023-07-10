@@ -20,8 +20,8 @@ class Router {
         }
 
         switch ($path_arr[0]) {
-            case 'login' :
-                echo 'Login endpoint';
+            case 'auth' :
+                echo 'Authentication endpoint';
                 exit();
             case 'user' :
                 echo 'User endpoint';

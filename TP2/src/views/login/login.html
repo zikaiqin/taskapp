@@ -3,8 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://meyerweb.com/eric/tools/css/reset/reset.css">
+    <link rel="stylesheet" href="./login.css">
 </head>
 <body>
-Login page
+<div class="main">
+    <form id="login-form" action="javascript:null">
+        <div>
+            <label for="username">Email:</label>
+            <input id="username" type="email" autocomplete="username" autofocus required>
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input id="password" type="password" autocomplete="current-password" required>
+        </div>
+        <div id="confirm-group" style="display: none">
+            <label for="confirm">Confirm password:</label>
+            <input id="confirm" type="password" autocomplete="new-password">
+        </div>
+        <div class="action-row">
+            <button id="main-action" type="submit">Sign in</button>
+        </div>
+        <div class="action-row">
+            <a id="alt-action" href="javascript:null">No account? Sign up here</a>
+        </div>
+    </form>
+</div>
+<script src="./login.js"></script>
 </body>
 </html>

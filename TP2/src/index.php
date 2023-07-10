@@ -8,9 +8,9 @@ require_once 'views/router.php';
 use Api\Router as ApiRouter;
 use View\Router as ViewRouter;
 
-function response() {
-    $base_path = get_url(__DIR__);
-    set_global('BASE_URL', $base_path);
+function main() {
+    $base_path = Url\get(__DIR__);
+    Globals\set('BASE_URL', $base_path);
     $path_arr = explode('/', trim(str_replace($base_path, '', $_SERVER['REQUEST_URI']), '/'));
 
     if (isset($path_arr[0]) && $path_arr[0] === 'api') {
@@ -21,7 +21,7 @@ function response() {
 }
 
 try {
-    response();
+    main();
 } catch(Exception $e) {
     die($e->getMessage());
 }
