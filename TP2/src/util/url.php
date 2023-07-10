@@ -2,6 +2,12 @@
 namespace Url;
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
+/**
+ * Get the url path to $dir <br>
+ * Only works on www-ens
+ * @param string $dir
+ * @return false|string
+ */
 function get(string $dir) {
     $fp_arr = explode('/', trim($dir, '/'));
     if (($index = array_search('public_html', $fp_arr)) !== false) {
