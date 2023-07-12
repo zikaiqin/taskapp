@@ -17,7 +17,7 @@ function headers(string $html, string $headers) {
 }
 
 /**
- * Replace relative path references with absolute path at runtime
+ * Replace relative path references with absolute path from $dir
  * @param string $html
  * @param string $dir
  * @return array|string|string[]

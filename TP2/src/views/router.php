@@ -20,9 +20,7 @@ class Router {
         }
         if (count($path_arr) <= 0) {
             # Redirect requests on '/' to '/home'
-            redirect:
-            $redirect = rtrim("https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]", '/') . '/home';
-            header("Location: $redirect");
+            self::redirect(global_get('BASE_URL') . '/home');
             exit();
         }
 
@@ -30,9 +28,24 @@ class Router {
         $fname = $path_arr[0];
         switch ($fname) {
             case '' :
-                goto redirect;
+                # Redirect requests on '/' to '/home'
+                self::redirect(global_get('BASE_URL') . '/home');
+                exit();
             case 'home' :
+                if (is_bool(global_get('user_id'))) {
+                    # User not authenticated
+                    # Redirecting to '/login'
+                    self::redirect(global_get('BASE_URL') . '/login');
+                    exit();
+                }
             case 'login' :
+                if (!is_bool(global_get('user_id'))) {
+                    # User already authenticated
+                    # Redirecting to '/home'
+                    self::redirect(global_get('BASE_URL') . '/home');
+                    exit();
+                }
+
                 $fdir = __DIR__ . "/$fname";
 
                 # Raw string of requested HTML file
@@ -41,7 +54,7 @@ class Router {
                     throw new \Exception("File not found at $fdir/$fname.html");
                 }
 
-                # Back-end constants we need to pass to front-end
+                # Constants needed to communicate with back-end
                 $constants = [
                     'BASE_URL' => $_SERVER['HTTP_HOST'] . global_get('BASE_URL')
                 ];
@@ -57,5 +70,10 @@ class Router {
             default :
                 goto page_not_found;
         }
+    }
+
+    private static function redirect($path) {
+        $redirect = rtrim("https://$_SERVER[HTTP_HOST]", '/') . $path;
+        header("Location: $redirect");
     }
 }

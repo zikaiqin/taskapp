@@ -1,6 +1,8 @@
 <?php
 namespace Api;
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
+require_once __DIR__ . '/auth/router.php';
+require_once __DIR__ . '/../util/globals.php';
 
 class Router {
     private function __construct() {}
@@ -9,22 +11,15 @@ class Router {
         header('Content-Type: application/json');
 
         if (count($path_arr) <= 0) {
-            # For now reject requests on '/api'
-            http_response_code(401);
-            echo 'Unauthorized request on root endpoint';
-            die();
-        }
-        if (count($path_arr) > 1) {
-            # For now reject paths of depth greater than 1
             endpoint_not_found:
             http_response_code(404);
-            echo 'Requested endpoint does not exist';
+            echo 'Nothing here';
             die();
         }
 
         switch ($path_arr[0]) {
             case 'auth' :
-                echo 'Authentication endpoint';
+                Auth\Router::dispatch(array_slice($path_arr, 1));
                 exit();
             case 'user' :
                 echo 'User endpoint';

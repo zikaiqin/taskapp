@@ -1,0 +1,12 @@
+CREATE TABLE Users(
+    UserID CHAR(32) PRIMARY KEY,
+    Username VARCHAR(255) UNIQUE NOT NULL,
+    Password VARCHAR(255) NOT NULL,
+    Privilege TINYINT(8) NOT NULL
+);
+
+CREATE TABLE Sessions(
+    SessionID VARCHAR(128) PRIMARY KEY,
+    UserID CHAR(32) UNIQUE NOT NULL,
+    Time INT(32) NOT NULL
+);

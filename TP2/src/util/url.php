@@ -5,6 +5,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 /**
  * Get the url path to $dir <br>
  * Only works on www-ens
+ * @todo Configure base path manually in config.json
  * @param string $dir
  * @return false|string
  */
