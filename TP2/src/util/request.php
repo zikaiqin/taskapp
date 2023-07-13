@@ -17,7 +17,7 @@ function require_methods(...$methods) : bool {
 
 function require_values(...$values) : bool {
     foreach ($values as $value) {
-        if (!isset($value)) {
+        if (!isset($value) || $value === '') {
             http_response_code(400);
             echo 'Form incomplete';
             return false;

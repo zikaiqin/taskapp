@@ -3,16 +3,19 @@ namespace Api\Auth;
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
 require_once __DIR__ . '/../../classes/database.php';
-require_once __DIR__ . '/../../util/globals.php';
+require_once __DIR__ . '/../../classes/globals.php';
 require_once __DIR__ . '/../../util/session.php';
 require_once __DIR__ . '/../../util/request.php';
 require_once __DIR__ . '/../../util/user.php';
 use Database;
+use Globals;
 use function Session\get as get_session;
-use function Session\add as add_session;
+use function Session\set as set_session;
+use function Session\delete as delete_session;
 use function Request\require_methods;
 use function Request\require_values;
 use function User\get_by_name as get_user_by_name;
+use function User\get_by_email as get_user_by_email;
 use function User\add as add_user;
 
 class Router {
@@ -37,13 +40,6 @@ class Router {
                     $password = $_POST['password'],
                 )) die();
 
-                # Cannot already be logged in
-                if (!is_bool(get_session(session_id(), Database::get()))) {
-                    http_response_code(403);
-                    echo 'Already logged in';
-                    die();
-                }
-
                 # Username and password must match
                 $row = get_user_by_name($username, Database::get());
                 if (!is_array($row) || !password_verify($password, $row['Password'])) {
@@ -52,32 +48,30 @@ class Router {
                     die();
                 }
 
+                # Cannot already be logged in
+                if (!is_bool(get_session(session_id(), Database::get()))) {
+                    http_response_code(403);
+                    echo 'Already logged in';
+                    die();
+                }
+
                 # Insert session ID into database, or replace if already exists
-                add_session(session_id(), $row['UserID'], $_SERVER['REQUEST_TIME'], Database::get());
+                set_session(session_id(), $row['Username'], $_SERVER['REQUEST_TIME'], Database::get());
 
                 echo 'Login success';
-//                $redirect =
-//                    rtrim("https://$_SERVER[HTTP_HOST]", '/') . global_get('BASE_URL') . '/home';
-//                header("Location: $redirect");
                 exit();
 
             case 'register' :
                 # Must use POST
                 if (!require_methods('POST')) die();
 
-                # Must send 'username', 'password' and 'confirm'(password) as form-data
+                # Must send 'username', 'email', 'password' and 'confirm'(password) as form-data
                 if (!require_values(
                     $username = $_POST['username'],
+                    $email = $_POST['email'],
                     $password = $_POST['password'],
                     $confirm = $_POST['confirm'],
                 )) die();
-
-                # Username must be a valid email
-                if (!filter_var($username, FILTER_VALIDATE_EMAIL)) {
-                    http_response_code(400);
-                    echo 'Email is not valid';
-                    die();
-                }
 
                 # Passwords must match
                 if ($password !== $confirm) {
@@ -86,28 +80,42 @@ class Router {
                     die();
                 }
 
-                # Username must be unique
-                if (!is_bool(get_user_by_name($username, Database::get()))) {
-                    http_response_code(401);
-                    echo 'Account already exists';
+                # Email must be valid
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    http_response_code(400);
+                    echo 'Email is not valid';
                     die();
                 }
 
-                $secret = password_hash($password, PASSWORD_DEFAULT);
+                # Username must be unique
+                if (!is_bool(get_user_by_name($username, Database::get()))) {
+                    http_response_code(400);
+                    echo 'Username is taken';
+                    die();
+                }
 
-                # Generate a unique ID for the user
-                $uid = bin2hex(random_bytes(16));
+                # Email must be unique
+                if (!is_bool(get_user_by_email($email, Database::get()))) {
+                    http_response_code(400);
+                    echo 'Email already in use';
+                    die();
+                }
+
+                # Destroy active session if authenticated
+                if (!is_bool(get_session(session_id(), Database::get()))) {
+                    delete_session(session_id(), Database::get());
+                    session_destroy();
+                    session_start();
+                }
 
                 # Insert new non-admin user into database
-                add_user($uid, $username, $secret, 0, Database::get());
+                $secret = password_hash($password, PASSWORD_DEFAULT);
+                add_user($username, $email, $secret, 0, Database::get());
 
                 # Insert session ID into database, or replace if already exists
-                add_session(session_id(), $uid, $_SERVER['REQUEST_TIME'], Database::get());
+                set_session(session_id(), $username, $_SERVER['REQUEST_TIME'], Database::get());
 
                 echo 'Registration success';
-//                $redirect =
-//                    rtrim("https://$_SERVER[HTTP_HOST]", '/') . global_get('BASE_URL') . '/home';
-//                header("Location: $redirect");
                 exit();
 
             default :

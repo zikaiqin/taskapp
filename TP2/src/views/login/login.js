@@ -1,29 +1,29 @@
-$(document).ready(() => {
+$(window).on('load', () => {
     const state = {
         action: 'login'
     }
-    $('#main-action').click(() => {
-        submit(state);
-    });
-    $('#alt-action').click(() => {
+    $('#alt-action').on('click', () => {
         toggle(state);
     });
+    $('#login-form').on('submit', () => {
+        submit(state);
+    })
 });
 
 const submit = (s) => {
-    let values = {
-        username: $('username').val(),
-        password: $('password').val(),
-    }
+    let username = $('#username').val(),
+        password = $('#password').val();
     if (s.action === 'login') {
-        postLogin(values);
+        login(username, password);
     } else {
-        values.confirm = $('confirm').val();
-        postNewUser(values);
+        let email = $('#email').val(),
+            confirm = $('#confirm').val();
+        register(username, email, password, confirm);
     }
 }
 
 const toggle = (s) => {
+    $('#error').text('');
     if (s.action === 'login') {
         s.action = 'signup'
         showSignupForm();
@@ -33,33 +33,59 @@ const toggle = (s) => {
     }
 }
 
-const postLogin = (values) => {
-    // TODO: Login
+const login = (username, password) => {
+    $.ajax('api/auth/login', {
+        type: 'POST',
+        data: {
+            username,
+            password,
+        },
+        success: () => {
+            window.location.replace('home');
+        },
+        error: (res) => {
+            $('#error').text(res.responseText);
+        },
+    });
 }
 
-const postNewUser = (values) => {
-    // TODO: Login
+const register = (username, email, password, confirm) => {
+    $.ajax('api/auth/register', {
+        type: 'POST',
+        data: {
+            username,
+            email,
+            password,
+            confirm,
+        },
+        success: () => {
+            window.location.replace('home');
+        },
+        error: (res) => {
+            $('#error').text(res.responseText);
+        },
+    });
 }
 
 const showSignupForm = () => {
-    clearForm(['password', 'confirm']);
-    $('#confirm-group').show();
-    $('#confirm').prop('required', true);
+    clearFields('email', 'password', 'confirm');
+    $('.signup-field').show();
+    $('#email', '#confirm').prop('required', true);
     $('#main-action').text('Sign up');
-    $('#alt-action').text('Already signed up? Log in here');
-    $('#username').focus();
+    $('#alt-action').text('Already registered? Log in here');
+    $('#username').trigger('focus');
 }
 
 const showLoginForm = () => {
-    clearForm(['password', 'confirm']);
-    $('#confirm-group').hide();
-    $('#confirm').prop('required', false);
+    clearFields('email', 'password', 'confirm');
+    $('.signup-field').hide();
+    $('#email', '#confirm').prop('required', false);
     $('#main-action').text('Sign in');
     $('#alt-action').text('No account? Sign up here');
-    $('#username').focus();
+    $('#username').trigger('focus');
 }
 
-const clearForm = (fields) => {
+const clearFields = (...fields) => {
     fields.forEach((field) => {
         $(`#${field}`).val('');
     });

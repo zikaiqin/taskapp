@@ -2,14 +2,10 @@
 namespace Api;
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 require_once __DIR__ . '/auth/router.php';
-require_once __DIR__ . '/../util/globals.php';
 
 class Router {
     private function __construct() {}
     public static function dispatch(array $path_arr) {
-        # All requests on '/api/* to receive json response
-        header('Content-Type: application/json');
-
         if (count($path_arr) <= 0) {
             endpoint_not_found:
             http_response_code(404);
