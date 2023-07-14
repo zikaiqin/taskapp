@@ -10,3 +10,29 @@ CREATE TABLE Sessions(
     Username VARCHAR(255) UNIQUE NOT NULL,
     Time INT(32) NOT NULL
 );
+
+CREATE TABLE Category(
+    CategoryID CHAR(32) PRIMARY KEY,
+    Name VARCHAR(64) NOT NULL,
+    Description TEXT NOT NULL
+);
+
+CREATE TABLE Tasks(
+    TaskID CHAR(32) PRIMARY KEY,
+    CategoryID CHAR(32),
+    CreatorName VARCHAR(255),
+    Title VARCHAR(64) NOT NULL,
+    Description TEXT NOT NULL,
+    StartDate DATE NOT NULL,
+    Status TINYINT(8) NOT NULL,
+    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) ON DELETE SET NULL,
+    FOREIGN KEY (CreatorName) REFERENCES Users(Username) ON DELETE SET NULL
+);
+
+CREATE TABLE Assignees(
+    TaskID CHAR(32) NOT NULL,
+    Username VARCHAR(255) NOT NULL,
+    PRIMARY KEY (TaskID, Username),
+    FOREIGN KEY (TaskID) REFERENCES Tasks(TaskID) ON DELETE CASCADE,
+    FOREIGN KEY (Username) REFERENCES Users(Username) ON DELETE CASCADE
+);

@@ -5,6 +5,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 require_once __DIR__ . '/../classes/globals.php';
 require_once __DIR__ . '/../util/finalize.php';
 
+use Exception;
 use Globals;
 use function Finalize\headers as write_head;
 use function Finalize\refs as write_refs;
@@ -33,7 +34,7 @@ class Router {
                 self::redirect('/home');
                 exit();
             case 'home' :
-                if (is_bool(Globals::get('USERNAME'))) {
+                if (Globals::get('USERNAME') === false) {
                     # User not authenticated
                     # Redirecting to '/login'
                     self::redirect('/login');
@@ -41,7 +42,7 @@ class Router {
                 }
                 goto skip;
             case 'login' :
-                if (!is_bool(Globals::get('USERNAME'))) {
+                if (Globals::get('USERNAME') !== false) {
                     # User already authenticated
                     # Redirecting to '/home'
                     self::redirect('/home');
@@ -54,7 +55,7 @@ class Router {
                 # Raw string of requested HTML file
                 $html = file_get_contents("$fdir/$fname.html");
                 if (!$html) {
-                    throw new \Exception("File not found at $fdir/$fname.html");
+                    throw new Exception("File not found at $fdir/$fname.html");
                 }
 
                 # Constants needed to communicate with back-end

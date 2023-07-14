@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../util/session.php';
 require_once __DIR__ . '/../../util/request.php';
 require_once __DIR__ . '/../../util/user.php';
 use Database;
-use function Session\get as get_session;
+use Globals;
 use function Session\set as set_session;
 use function Session\delete as delete_session;
 use function Request\require_methods;
@@ -32,11 +32,14 @@ class Router {
             case 'logout':
                 # Must use POST
                 if (!require_methods('POST')) die();
-                if (!is_array(get_session(session_id(), Database::get()))) {
+
+                # Must be authenticated
+                if (Globals::get('USERNAME') === false) {
                     http_response_code(401);
                     echo 'Not authenticated';
                     die();
                 }
+
                 delete_session(session_id(), Database::get());
                 session_destroy();
                 echo 'Logout success';
@@ -52,18 +55,18 @@ class Router {
                     $password = $_POST['password'],
                 )) die();
 
+                # Cannot already be logged in
+                if (Globals::get('USERNAME') !== false) {
+                    http_response_code(403);
+                    echo 'Already logged in';
+                    die();
+                }
+
                 # Username and password must match
                 $row = get_user_by_name($username, Database::get());
                 if (!is_array($row) || !password_verify($password, $row['Password'])) {
                     http_response_code(401);
                     echo 'Incorrect login credentials';
-                    die();
-                }
-
-                # Cannot already be logged in
-                if (!is_bool(get_session(session_id(), Database::get()))) {
-                    http_response_code(403);
-                    echo 'Already logged in';
                     die();
                 }
 
@@ -85,6 +88,12 @@ class Router {
                     $confirm = $_POST['confirm'],
                 )) die();
 
+                if (($ul = strlen($username) > 255) || ($pl = strlen($password) > 255) || strlen($email) > 255) {
+                    http_response_code(400);
+                    echo $ul ? 'Username' : ($pl ? 'Password' : 'Email') . ' is too long';
+                    die();
+                }
+
                 # Passwords must match
                 if ($password !== $confirm) {
                     http_response_code(400);
@@ -100,22 +109,21 @@ class Router {
                 }
 
                 # Username must be unique
-                if (!is_bool(get_user_by_name($username, Database::get()))) {
+                if (get_user_by_name($username, Database::get()) !== false) {
                     http_response_code(400);
                     echo 'Username is taken';
                     die();
                 }
 
                 # Email must be unique
-                if (!is_bool(get_user_by_email($email, Database::get()))) {
+                if (get_user_by_email($email, Database::get()) !== false) {
                     http_response_code(400);
                     echo 'Email already in use';
                     die();
                 }
 
                 # Destroy active session if authenticated
-                if (!is_bool(get_session(session_id(), Database::get()))) {
-                    delete_session(session_id(), Database::get());
+                if (delete_session(session_id(), Database::get()) > 0) {
                     session_destroy();
                     session_start();
                 }

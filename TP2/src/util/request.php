@@ -1,13 +1,11 @@
 <?php
 namespace Request;
+use Exception;
+
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
 function require_methods(...$methods) : bool {
-    $found = array_reduce(
-        $methods,
-        fn($carry, $next) => $carry || in_array($_SERVER['REQUEST_METHOD'], $methods),
-        false
-    );
+    $found = in_array($_SERVER['REQUEST_METHOD'], $methods);
     if (!$found) {
         http_response_code(405);
         echo 'Method not allowed';

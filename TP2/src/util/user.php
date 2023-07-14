@@ -30,5 +30,6 @@ function add(string $uname, string $email, string $pwd, int $perms, PDO $pdo) : 
     $query = 'INSERT INTO Users VALUES (:uname, :email, :pwd, :perms)';
     $values = [':uname' => $uname, ':email' => $email, ':pwd' => $pwd, ':perms' => $perms];
     $stmt = $pdo->prepare($query);
-    return $stmt->execute($values);
+    $stmt->execute($values);
+    return $stmt->rowCount();
 }

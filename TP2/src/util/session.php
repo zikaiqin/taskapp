@@ -19,16 +19,18 @@ function validate_time(int $time_created, int $time_requested, int $lifetime) : 
     return $time_requested <= $time_created + $lifetime;
 }
 
-function set(string $sid, string $uname, int $time_requested, PDO $pdo) : bool {
+function set(string $sid, string $uname, int $time_requested, PDO $pdo) : int {
     $query = 'REPLACE INTO Sessions VALUES (:sid, :uname, :time_requested)';
     $values = [':sid' => $sid, ':uname' => $uname, ':time_requested' => $time_requested];
     $stmt = $pdo->prepare($query);
-    return $stmt->execute($values);
+    $stmt->execute($values);
+    return $stmt->rowCount();
 }
 
-function delete(string $sid, PDO $pdo) : bool {
+function delete(string $sid, PDO $pdo) : int {
     $query = 'DELETE FROM Sessions WHERE SessionID = :sid';
     $values = [':sid' => $sid];
     $stmt = $pdo->prepare($query);
-    return $stmt->execute($values);
+    $stmt->execute($values);
+    return $stmt->rowCount();
 }

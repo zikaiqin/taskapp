@@ -2,6 +2,7 @@
 namespace Api;
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 require_once __DIR__ . '/auth/router.php';
+require_once __DIR__ . '/category/router.php';
 
 class Router {
     private function __construct() {}
@@ -21,7 +22,7 @@ class Router {
                 echo 'User endpoint';
                 exit();
             case 'category' :
-                echo 'Category endpoint';
+                Category\Router::dispatch(array_slice($path_arr, 1));
                 exit();
             case 'task' :
                 echo 'Task endpoint';

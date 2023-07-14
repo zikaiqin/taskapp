@@ -14,7 +14,7 @@ use View\Router as ViewRouter;
 function main() {
     # Validate session cookies
     session_start();
-    if (!is_bool($session_info = Session\get(session_id(), Database::get()))) {
+    if (($session_info = Session\get(session_id(), Database::get())) !== false) {
         # User authenticated, check session expiration
         $authenticated = Session\validate_time($session_info['Time'], $_SERVER['REQUEST_TIME'], 3600);
         if (!$authenticated) {
@@ -47,6 +47,6 @@ function main() {
 try {
     main();
 } catch(Exception $e) {
-    header('Content-Type: application/json', true, 500);
+    header('Content-Type: text/html', true, 500);
     echo 'Uncaught exception: ' . $e->getMessage();
 }
