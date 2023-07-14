@@ -8,7 +8,6 @@ require_once __DIR__ . '/../../util/session.php';
 require_once __DIR__ . '/../../util/request.php';
 require_once __DIR__ . '/../../util/user.php';
 use Database;
-use Globals;
 use function Session\get as get_session;
 use function Session\set as set_session;
 use function Session\delete as delete_session;
@@ -30,6 +29,19 @@ class Router {
         }
 
         switch ($path_arr[0]) {
+            case 'logout':
+                # Must use POST
+                if (!require_methods('POST')) die();
+                if (!is_array(get_session(session_id(), Database::get()))) {
+                    http_response_code(401);
+                    echo 'Not authenticated';
+                    die();
+                }
+                delete_session(session_id(), Database::get());
+                session_destroy();
+                echo 'Logout success';
+                exit();
+
             case 'login':
                 # Must use POST
                 if (!require_methods('POST')) die();
