@@ -18,6 +18,7 @@ use function Request\require_authentication;
 use function Request\require_methods;
 use function Request\require_privilege;
 use function Request\require_values;
+use function Request\to_camel_case;
 
 class Router {
     private function __construct() {}
@@ -38,7 +39,7 @@ class Router {
                 echo 'Database error';
                 die();
             }
-            $res = json_encode($table, JSON_UNESCAPED_UNICODE);
+            $res = json_encode(to_camel_case($table), JSON_UNESCAPED_UNICODE);
             header('Content-type: application/json');
             echo $res;
             exit();

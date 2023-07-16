@@ -40,3 +40,13 @@ function require_privilege($actual, $expected) : bool {
     }
     return true;
 }
+
+function to_camel_case(array $table) {
+    return array_map(function($row) {
+        $acc = [];
+        foreach ($row as $key => $value) {
+            $acc[lcfirst($key)] = $value;
+        }
+        return $acc;
+    }, $table);
+}

@@ -12,6 +12,7 @@ use function Request\require_methods;
 use function Request\require_values;
 use function Request\require_authentication;
 use function Request\require_privilege;
+use function Request\to_camel_case;
 use function User\fetch_all as fetch_users;
 use function User\get_by_email as get_user_by_email;
 use function User\get_by_name as get_user_by_name;
@@ -36,7 +37,7 @@ class Router {
                 echo 'Database error';
                 die();
             }
-            $res = json_encode($table, JSON_UNESCAPED_UNICODE);
+            $res = json_encode(to_camel_case($table), JSON_UNESCAPED_UNICODE);
             header('Content-type: application/json');
             echo $res;
             exit();

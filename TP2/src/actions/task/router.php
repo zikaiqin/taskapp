@@ -19,6 +19,7 @@ use function Request\require_methods;
 use function Request\require_values;
 use function Request\require_authentication;
 use function Request\require_privilege;
+use function Request\to_camel_case;
 use function Task\fetch_all as fetch_tasks;
 use function Task\get as get_task_by_id;
 use function Task\set as set_task;
@@ -48,7 +49,7 @@ class Router {
                 die();
             }
             $res = json_encode(
-                ['tasks' => $tasks, 'assignees' => $assignees],
+                ['tasks' => to_camel_case($tasks), 'assignees' => to_camel_case($assignees)],
                 JSON_UNESCAPED_UNICODE,
             );
             header('Content-type: application/json');

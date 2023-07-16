@@ -5,7 +5,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 use PDO;
 
 function fetch_all(PDO $pdo) {
-    $query = 'SELECT * FROM Users';
+    $query = 'SELECT Username, Email, Privilege FROM Users';
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     if (is_array($table = $stmt->fetchAll())) {
