@@ -39,3 +39,23 @@
 .status-select {
     padding: 4px 8px 4px 8px;
 }
+
+.profile-card {
+    min-width: 135px;
+    max-width: 200px;
+}
+.profile-feature {
+    padding: 0 16px 0 16px;
+    width: 100%;
+}
+#username {
+    padding-bottom: 4px;
+}
+#logout {
+    margin: 0 16px 0 16px;
+}
+
+::-webkit-datetime-edit-month-field { cursor: text; }
+::-webkit-datetime-edit-day-field { cursor: text; }
+::-webkit-datetime-edit-year-field { cursor: text; }
+::-webkit-calendar-picker-indicator { cursor: pointer; }

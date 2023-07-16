@@ -23,3 +23,20 @@ function require_values(...$values) : bool {
     }
     return true;
 }
+
+function require_authentication($username) : bool {
+    if ($username === false) {
+        http_response_code(401);
+        echo 'Not authenticated';
+        return false;
+    }
+    return true;
+}
+function require_privilege($actual, $expected) : bool {
+    if (!is_numeric($actual) || ((int) $actual !== $expected)) {
+        http_response_code(403);
+        echo 'Not allowed';
+        return false;
+    }
+    return true;
+}

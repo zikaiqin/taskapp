@@ -4,18 +4,19 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
 require_once __DIR__ . '/../../classes/database.php';
 require_once __DIR__ . '/../../classes/globals.php';
-require_once __DIR__ . '/../../util/session.php';
+require_once __DIR__ . '/../../helpers/session.php';
+require_once __DIR__ . '/../../helpers/user.php';
 require_once __DIR__ . '/../../util/request.php';
-require_once __DIR__ . '/../../util/user.php';
 use Database;
 use Globals;
 use function Session\set as set_session;
 use function Session\delete as delete_session;
 use function Request\require_methods;
 use function Request\require_values;
+use function Request\require_authentication;
 use function User\get_by_name as get_user_by_name;
 use function User\get_by_email as get_user_by_email;
-use function User\add as add_user;
+use function User\set as set_user;
 
 class Router {
     private function __construct() {}
@@ -34,11 +35,7 @@ class Router {
                 if (!require_methods('POST')) die();
 
                 # Must be authenticated
-                if (Globals::get('USERNAME') === false) {
-                    http_response_code(401);
-                    echo 'Not authenticated';
-                    die();
-                }
+                if (!require_authentication(Globals::get('USERNAME'))) die();
 
                 delete_session(session_id(), Database::get());
                 session_destroy();
@@ -90,7 +87,7 @@ class Router {
 
                 if (($ul = strlen($username) > 255) || ($pl = strlen($password) > 255) || strlen($email) > 255) {
                     http_response_code(400);
-                    echo $ul ? 'Username' : ($pl ? 'Password' : 'Email') . ' is too long';
+                    echo ($ul ? 'Username' : ($pl ? 'Password' : 'Email')) . ' is too long';
                     die();
                 }
 
@@ -110,14 +107,14 @@ class Router {
 
                 # Username must be unique
                 if (get_user_by_name($username, Database::get()) !== false) {
-                    http_response_code(400);
+                    http_response_code(403);
                     echo 'Username is taken';
                     die();
                 }
 
                 # Email must be unique
                 if (get_user_by_email($email, Database::get()) !== false) {
-                    http_response_code(400);
+                    http_response_code(403);
                     echo 'Email already in use';
                     die();
                 }
@@ -130,7 +127,7 @@ class Router {
 
                 # Insert new non-admin user into database
                 $secret = password_hash($password, PASSWORD_DEFAULT);
-                add_user($username, $email, $secret, 0, Database::get());
+                set_user($username, $email, $secret, 0, Database::get(), false);
 
                 # Insert session ID into database, or replace if already exists
                 set_session(session_id(), $username, $_SERVER['REQUEST_TIME'], Database::get());

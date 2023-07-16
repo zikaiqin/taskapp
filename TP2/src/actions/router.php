@@ -3,6 +3,8 @@ namespace Api;
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 require_once __DIR__ . '/auth/router.php';
 require_once __DIR__ . '/category/router.php';
+require_once __DIR__ . '/task/router.php';
+require_once __DIR__ . '/user/router.php';
 
 class Router {
     private function __construct() {}
@@ -19,13 +21,13 @@ class Router {
                 Auth\Router::dispatch(array_slice($path_arr, 1));
                 exit();
             case 'user' :
-                echo 'User endpoint';
+                User\Router::dispatch(array_slice($path_arr, 1));
                 exit();
             case 'category' :
                 Category\Router::dispatch(array_slice($path_arr, 1));
                 exit();
             case 'task' :
-                echo 'Task endpoint';
+                Task\Router::dispatch(array_slice($path_arr, 1));
                 exit();
             default :
                 goto endpoint_not_found;

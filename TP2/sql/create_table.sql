@@ -11,7 +11,7 @@ CREATE TABLE Sessions(
     Time INT(32) NOT NULL
 );
 
-CREATE TABLE Category(
+CREATE TABLE Categories(
     CategoryID CHAR(32) PRIMARY KEY,
     Name VARCHAR(64) NOT NULL,
     Description TEXT NOT NULL
@@ -25,7 +25,7 @@ CREATE TABLE Tasks(
     Description TEXT NOT NULL,
     StartDate DATE NOT NULL,
     Status TINYINT(8) NOT NULL,
-    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) ON DELETE SET NULL,
+    FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID) ON DELETE SET NULL,
     FOREIGN KEY (CreatorName) REFERENCES Users(Username) ON DELETE SET NULL
 );
 
