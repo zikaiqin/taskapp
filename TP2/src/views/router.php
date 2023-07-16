@@ -62,6 +62,8 @@ class Router {
                 $constants = [
                     'BASE_URL' => $_SERVER['HTTP_HOST'] . Globals::get('BASE_URL')
                 ];
+                if (Globals::get('USERNAME') !== false) $constants['USERNAME'] = Globals::get('USERNAME');
+                if (Globals::get('PRIVILEGE') !== false) $constants['PRIVILEGE'] = Globals::get('PRIVILEGE');
 
                 # Write constants as JSON string in html header
                 $serialized = json_encode($constants, JSON_FORCE_OBJECT | JSON_UNESCAPED_SLASHES);

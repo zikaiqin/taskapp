@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../util/request.php';
 use Database;
 use Globals;
 use function Assignee\assign as assign_to;
+use function Assignee\fetch_all as fetch_assignees;
 use function Assignee\verify as verify_assignees;
 use function Category\get_by_id as get_category_by_id;
 use function Request\require_methods;
@@ -38,12 +39,18 @@ class Router {
         # Honor GET requests on /api/task
         if (count($path_arr) === 0) {
             if (!require_methods('GET')) die();
-            if (($table = fetch_tasks(Database::get())) === false) {
+            if (
+                ($tasks = fetch_tasks(Database::get())) === false ||
+                ($assignees = fetch_assignees(Database::get())) === false
+            ) {
                 http_response_code(500);
                 echo 'Database error';
                 die();
             }
-            $res = json_encode($table, JSON_UNESCAPED_UNICODE);
+            $res = json_encode(
+                ['tasks' => $tasks, 'assignees' => $assignees],
+                JSON_UNESCAPED_UNICODE,
+            );
             header('Content-type: application/json');
             echo $res;
             exit();
