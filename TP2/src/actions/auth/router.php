@@ -25,7 +25,7 @@ class Router {
         if (count($path_arr) <= 0 || count($path_arr) > 1) {
             endpoint_not_found:
             http_response_code(404);
-            echo 'Nothing here';
+            echo 'Rien ici.';
             die();
         }
 
@@ -39,7 +39,7 @@ class Router {
 
                 delete_session(session_id(), Database::get());
                 session_destroy();
-                echo 'Logout success';
+                echo ' Déconnexion réussie.';
                 exit();
 
             case 'login':
@@ -55,7 +55,7 @@ class Router {
                 # Cannot already be logged in
                 if (Globals::get('USERNAME') !== false) {
                     http_response_code(403);
-                    echo 'Already logged in';
+                    echo 'Déjà connecté.';
                     die();
                 }
 
@@ -63,14 +63,14 @@ class Router {
                 $row = get_user_by_name($username, Database::get());
                 if (!is_array($row) || !password_verify($password, $row['Password'])) {
                     http_response_code(401);
-                    echo 'Incorrect login credentials';
+                    echo 'Identifiants de connexion incorrects.';
                     die();
                 }
 
                 # Insert session ID into database, or replace if already exists
                 set_session(session_id(), $row['Username'], $_SERVER['REQUEST_TIME'], Database::get());
 
-                echo 'Login success';
+                echo 'Connexion réussie.';
                 exit();
 
             case 'register' :
@@ -87,35 +87,35 @@ class Router {
 
                 if (($ul = strlen($username) > 255) || ($pl = strlen($password) > 255) || strlen($email) > 255) {
                     http_response_code(400);
-                    echo ($ul ? 'Username' : ($pl ? 'Password' : 'Email')) . ' is too long';
+                    echo ($ul ? 'Nom d\'utilisateur' : ($pl ? 'Mot de passe' : 'Courriel')) . ' trop long.';
                     die();
                 }
 
                 # Passwords must match
                 if ($password !== $confirm) {
                     http_response_code(400);
-                    echo 'Passwords do not match';
+                    echo 'Les mots de passe ne correspondent pas.';
                     die();
                 }
 
                 # Email must be valid
                 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     http_response_code(400);
-                    echo 'Email is not valid';
+                    echo 'Le courriel n’est pas valide.';
                     die();
                 }
 
                 # Username must be unique
                 if (get_user_by_name($username, Database::get()) !== false) {
                     http_response_code(403);
-                    echo 'Username is taken';
+                    echo 'Ce nom d\'utilisateur existe déjà.';
                     die();
                 }
 
                 # Email must be unique
                 if (get_user_by_email($email, Database::get()) !== false) {
                     http_response_code(403);
-                    echo 'Email already in use';
+                    echo 'Courriel déjà utilisé.';
                     die();
                 }
 
@@ -132,7 +132,7 @@ class Router {
                 # Insert session ID into database, or replace if already exists
                 set_session(session_id(), $username, $_SERVER['REQUEST_TIME'], Database::get());
 
-                echo 'Registration success';
+                echo 'Inscription réussie';
                 exit();
 
             default :

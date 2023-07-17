@@ -17,7 +17,7 @@ class Router {
             # For now reject paths of depth greater than 1
             page_not_found:
             http_response_code(404);
-            echo 'Page not found';
+            echo 'Page introuvable.';
             die();
         }
         if (count($path_arr) <= 0) {

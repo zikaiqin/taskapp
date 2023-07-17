@@ -33,7 +33,7 @@ class Router {
         if (count($path_arr) > 1) {
             endpoint_not_found:
             http_response_code(404);
-            echo 'Nothing here';
+            echo 'Rien ici.';
             die();
         }
 
@@ -45,7 +45,7 @@ class Router {
                 ($assignees = fetch_assignees(Database::get())) === false
             ) {
                 http_response_code(500);
-                echo 'Database error';
+                echo 'Erreur de base de données.';
                 die();
             }
             $res = json_encode(
@@ -77,35 +77,35 @@ class Router {
                 # Requires 0 <= status <= 255
                 if (!is_numeric($status) || ($status = (int) $status) < 0 || $status > 255) {
                     http_response_code(400);
-                    echo 'Invalid status';
+                    echo 'Statut non valide.';
                     die();
                 }
 
                 # Title must not be longer than 64 chars
                 if (strlen($title) > 64) {
                     http_response_code(400);
-                    echo 'Title is too long';
+                    echo 'Titre trop long.';
                     die();
                 }
 
                 # Date must be formatted correctly
                 if (($date_obj = date_create($raw_date)) === false) {
                     http_response_code(400);
-                    echo 'Malformed date string';
+                    echo 'Date mal formulée.';
                     die();
                 }
 
                 # Assignees must be formatted correctly
                 if (($assignees = json_decode($assign_json, true)) === null || !is_array($assignees)) {
                     http_response_code(400);
-                    echo 'Assignee data unreadable';
+                    echo 'Données du destinataire illisibles.';
                     die();
                 }
 
                 # Category must exist
                 if (get_category_by_id($category_id, Database::get()) === false) {
                     http_response_code(400);
-                    echo 'Category does not exist';
+                    echo 'Cette catégorie n\'existe pas.';
                     die();
                 }
 
@@ -131,7 +131,7 @@ class Router {
                 # Assign task to all assignees
                 assign_to($task_id, Database::get(), ...$assignees);
 
-                echo 'Task created';
+                echo 'Tâche créée.';
                 exit();
 
             case 'edit' :
@@ -151,21 +151,21 @@ class Router {
                 # Requires 0 <= status <= 255
                 if (!is_numeric($status) || ($status = (int) $status) < 0 || $status > 255) {
                     http_response_code(400);
-                    echo 'Invalid status';
+                    echo 'Statut non valide.';
                     die();
                 }
 
                 # Date must be formatted correctly
                 if (($date_obj = date_create($raw_date)) === false) {
                     http_response_code(400);
-                    echo 'Malformed date string';
+                    echo 'Date mal formulée.';
                     die();
                 }
 
                 # Assignees must be formatted correctly
                 if (($assignees = json_decode($assign_json, true)) === null || !is_array($assignees)) {
                     http_response_code(400);
-                    echo 'Assignee data unreadable';
+                    echo 'Données du destinataire illisibles.';
                     die();
                 }
 
@@ -173,7 +173,7 @@ class Router {
                 if (($row = get_task_by_id($task_id, Database::get())) === false) {
                     task_not_found:
                     http_response_code(404);
-                    echo 'Task not found';
+                    echo 'Tâche introuvable.';
                     die();
                 }
 
@@ -193,14 +193,14 @@ class Router {
                     $row['Description'] === ($_POST['description'] ?? '')
                 ) {
                     http_response_code(200);
-                    echo assign_to($task_id, Database::get(), $assignees) === 0 ? 'No changes' : 'Task modified';
+                    echo assign_to($task_id, Database::get(), $assignees) === 0 ? 'Aucun changement.' : 'Tâche modifiée.';
                     exit();
                 }
 
                 # Title must not be longer than 64 chars
                 if (strlen($title) > 64) {
                     http_response_code(400);
-                    echo 'Title is too long';
+                    echo 'Titre trop long.';
                     die();
                 }
 
@@ -210,7 +210,7 @@ class Router {
                     get_category_by_id($category_id, Database::get()) === false
                 ) {
                     http_response_code(400);
-                    echo 'Category does not exist';
+                    echo 'Cette catégorie n\'existe pas.';
                     die();
                 }
 
@@ -229,7 +229,7 @@ class Router {
                 # Assign task to all assignees
                 assign_to($task_id, Database::get(), ...$assignees);
 
-                echo 'Task modified';
+                echo 'Tâche modifiée.';
                 exit();
 
             case 'delete' :
@@ -249,7 +249,7 @@ class Router {
                 # Category must exist
                 if (delete_task($task_id, Database::get()) <= 0) goto task_not_found;
 
-                echo 'Task deleted';
+                echo 'Tâche supprimée.';
                 exit();
 
             default :

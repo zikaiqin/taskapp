@@ -25,7 +25,7 @@ class Router {
         if (count($path_arr) > 1) {
             endpoint_not_found:
             http_response_code(404);
-            echo 'Nothing here';
+            echo 'Rien ici.';
             die();
         }
 
@@ -34,7 +34,7 @@ class Router {
             if (!require_methods('GET')) die();
             if (($table = fetch_users(Database::get())) === false) {
                 http_response_code(500);
-                echo 'Database error';
+                echo 'Erreur de base de données.';
                 die();
             }
             $res = json_encode(to_camel_case($table), JSON_UNESCAPED_UNICODE);
@@ -62,27 +62,27 @@ class Router {
 
                 if (($pl = strlen($password) > 255) || strlen($email) > 255) {
                     http_response_code(400);
-                    echo ($pl ? 'Password' : 'Email') . ' is too long';
+                    echo ($pl ? 'Mot de passe' : 'Courriel') . ' trop long.';
                     die();
                 }
 
                 if (!is_numeric($privilege) || ($privilege = (int) $privilege) < 0 || $privilege > 1) {
                     http_response_code(400);
-                    echo 'Invalid privilege level';
+                    echo 'Niveau de privilège invalide.';
                     die();
                 }
 
                 # Email must be valid
                 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     http_response_code(400);
-                    echo 'Email is not valid';
+                    echo 'Le courriel n’est pas valide.';
                     die();
                 }
 
                 # Username must belong to an existing user
                 if (($res = get_user_by_name($username, Database::get())) === false) {
                     http_response_code(404);
-                    echo 'User not found';
+                    echo 'Utilisateur introuvable.';
                     die();
                 }
 
@@ -92,21 +92,21 @@ class Router {
                     $res['Privilege'] === $privilege
                 ) {
                     http_response_code(200);
-                    echo 'No changes';
+                    echo 'Aucun changement.';
                     exit();
                 }
 
                 # Email must be unique
                 if ($res['Email'] !== $email && get_user_by_email($email, Database::get()) !== false) {
                     http_response_code(403);
-                    echo 'Email already in use';
+                    echo 'Courriel déjà utilisé.';
                     die();
                 }
 
                 # Update user with new info
                 $secret = password_hash($password, PASSWORD_DEFAULT);
                 set_user($username, $email, $secret, $privilege, Database::get());
-                echo 'User modified';
+                echo 'Utilisateur modifié.';
                 exit();
 
             default :

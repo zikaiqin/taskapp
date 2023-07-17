@@ -70,18 +70,18 @@ const register = (username, email, password, confirm) => {
 const showSignupForm = () => {
     clearFields('email', 'password', 'confirm');
     $('.signup-field').show();
-    $('#email', '#confirm').prop('required', true);
-    $('#main-action').text('Sign up');
-    $('#alt-action').text('Already registered? Log in here');
+    $('#email').prop('required', true);
+    $('#main-action').text('S\'inscrire');
+    $('#alt-action').text('Déjà inscrit? Connectez-vous');
     $('#username').trigger('focus');
 }
 
 const showLoginForm = () => {
     clearFields('email', 'password', 'confirm');
     $('.signup-field').hide();
-    $('#email', '#confirm').prop('required', false);
-    $('#main-action').text('Sign in');
-    $('#alt-action').text('No account? Sign up here');
+    $('#email').prop('required', false);
+    $('#main-action').text('Se connecter');
+    $('#alt-action').text('Pas de compte? Inscrivez-vous');
     $('#username').trigger('focus');
 }
 

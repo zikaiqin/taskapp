@@ -61,7 +61,7 @@ function verify (array $assignees, array $users) : bool {
         }
         if (!$found) {
             http_response_code(400);
-            echo "User $assignee does not exist";
+            echo "L\'utilisateur $assignee n'existe pas.";
             return false;
         }
     }
