@@ -64,10 +64,10 @@ class Router {
                 ];
                 if (Globals::get('USERNAME') !== false) $constants['USERNAME'] = Globals::get('USERNAME');
                 if (Globals::get('PRIVILEGE') !== false) $constants['PRIVILEGE'] = Globals::get('PRIVILEGE');
-                if ($fname === 'home') $constants['TASK_STATUS'] = ['To Do', 'In Progress', 'Complete'];
+                if ($fname === 'home') $constants['TASK_STATUS'] = ['À faire', 'Complet'];
 
                 # Write constants as JSON string in html header
-                $serialized = json_encode($constants, JSON_FORCE_OBJECT | JSON_UNESCAPED_SLASHES);
+                $serialized = json_encode($constants, JSON_UNESCAPED_SLASHES);
                 $headers = "\t<script>const CONSTANTS = Object.freeze($serialized)</script>\n";
                 echo write_refs(
                     write_head($html, $headers),
