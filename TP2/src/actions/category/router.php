@@ -4,23 +4,26 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
 require_once __DIR__ . '/../../classes/database.php';
 require_once __DIR__ . '/../../classes/globals.php';
-require_once __DIR__ . '/../../util/category.php';
+require_once __DIR__ . '/../../helpers/category.php';
 require_once __DIR__ . '/../../util/request.php';
 use Database;
+use Globals;
 use function Category\fetch_all as fetch_categories;
 use function Category\get_by_name;
 use function Category\get_by_name as get_category_by_name;
 use function Category\get_by_id as get_category_by_id;
 use function Category\set as set_category;
 use function Category\delete as delete_category;
+use function Request\require_authentication;
 use function Request\require_methods;
+use function Request\require_privilege;
 use function Request\require_values;
+use function Request\to_camel_case;
 
 class Router {
     private function __construct() {}
 
-    public static function dispatch(array $path_arr)
-    {
+    public static function dispatch(array $path_arr) {
         if (count($path_arr) > 1) {
             endpoint_not_found:
             http_response_code(404);
@@ -36,7 +39,7 @@ class Router {
                 echo 'Database error';
                 die();
             }
-            $res = json_encode($table, JSON_UNESCAPED_UNICODE);
+            $res = json_encode(to_camel_case($table), JSON_UNESCAPED_UNICODE);
             header('Content-type: application/json');
             echo $res;
             exit();
@@ -46,6 +49,10 @@ class Router {
             case 'add' :
                 # Must use POST
                 if (!require_methods('POST')) die();
+
+                # Requires authentication and admin privilege
+                if (!require_authentication(Globals::get('USERNAME')) ||
+                    !require_privilege(Globals::get('PRIVILEGE'), 1)) die();
 
                 # Must send 'name'
                 if (!require_values($name = $_POST['name'])) die();
@@ -64,7 +71,7 @@ class Router {
 
                 # Generate 128-bit uid
                 $category_id = bin2hex(random_bytes(16));
-                set_category($category_id, $name, $_POST['description'] ?? '', Database::get());
+                set_category($category_id, $name, $_POST['description'] ?? '', Database::get(), false);
                 echo 'Category created';
                 exit();
 
@@ -72,29 +79,47 @@ class Router {
                 # Must use POST
                 if (!require_methods('POST')) die();
 
-                # Must send 'id' and 'name'
-                if (!require_values($id = $_POST['id'], $name = $_POST['name'])) die();
-                if (strlen($name) > 64) {
-                    http_response_code(400);
-                    echo 'Category name is too long';
-                    die();
-                }
+                # Requires authentication and admin privilege
+                if (!require_authentication(Globals::get('USERNAME')) ||
+                    !require_privilege(Globals::get('PRIVILEGE'), 1)) die();
+
+                # Must send 'categoryID'
+                if (!require_values($category_id = $_POST['categoryID'])) die();
 
                 # Category must exist
-                if (($res = get_category_by_id($id, Database::get())) !== false) {
+                if (($res = get_category_by_id($category_id, Database::get())) === false) {
                     http_response_code(404);
-                    echo 'Category does not exist';
+                    echo 'Category not found';
                     die();
                 }
 
-                # Name must be unique
-                if ($res['Name'] !== $name && (get_by_name($name, Database::get()) !== false)) {
-                    http_response_code(403);
-                    echo 'Duplicate names not allowed';
-                    die();
+                # Check for changes
+                if (isset($_POST['name']) && ($name = $_POST['name']) !== $res['Name']) {
+                    # Name must be no longer than 64 chars
+                    if (strlen($name) > 64) {
+                        http_response_code(400);
+                        echo 'Category name is too long';
+                        die();
+                    }
+
+                    # Name must be unique
+                    if (get_by_name($name, Database::get()) !== false) {
+                        http_response_code(403);
+                        echo 'Duplicate names not allowed';
+                        die();
+                    }
+                } else if (!isset($_POST['description']) || ($res['Description'] === $_POST['description'])) {
+                    http_response_code(200);
+                    echo 'No changes';
+                    exit();
                 }
 
-                set_category($id, $name, $_POST['description'] ?? '', Database::get());
+                set_category(
+                    $category_id,
+                        $name ?? $res['Name'],
+                        $_POST['description'] ?? '',
+                    Database::get(),
+                );
                 echo 'Category modified';
                 exit();
 
@@ -102,13 +127,17 @@ class Router {
                 # Must use POST
                 if (!require_methods('POST')) die();
 
-                # Must send 'id'
-                if (!require_values($id = $_POST['id'])) die();
+                # Requires authentication and admin privilege
+                if (!require_authentication(Globals::get('USERNAME')) ||
+                    !require_privilege(Globals::get('PRIVILEGE'), 1)) die();
+
+                # Must send 'categoryID'
+                if (!require_values($category_id = $_POST['categoryID'])) die();
 
                 # Category must exist
-                if (delete_category($id, Database::get()) <= 0) {
+                if (delete_category($category_id, Database::get()) <= 0) {
                     http_response_code(404);
-                    echo 'Category does not exist';
+                    echo 'Category not found';
                     die();
                 }
 

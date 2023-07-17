@@ -5,7 +5,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 use PDO;
 
 function fetch_all(PDO $pdo) {
-    $query = 'SELECT * FROM Category';
+    $query = 'SELECT * FROM Categories';
     $stmt = $pdo->prepare($query);
     $stmt->execute();
     if (is_array($table = $stmt->fetchAll())) {
@@ -15,7 +15,7 @@ function fetch_all(PDO $pdo) {
 }
 
 function get_by_name(string $name, PDO $pdo) {
-    $query = 'SELECT * FROM Category WHERE Name = :name';
+    $query = 'SELECT * FROM Categories WHERE Name = :name';
     $values = [':name' => $name];
     $stmt = $pdo->prepare($query);
     $stmt->execute($values);
@@ -26,7 +26,7 @@ function get_by_name(string $name, PDO $pdo) {
 }
 
 function get_by_id(string $id, PDO $pdo) {
-    $query = 'SELECT * FROM Category WHERE CategoryID = :id';
+    $query = 'SELECT * FROM Categories WHERE CategoryID = :id';
     $values = [':id' => $id];
     $stmt = $pdo->prepare($query);
     $stmt->execute($values);
@@ -36,8 +36,8 @@ function get_by_id(string $id, PDO $pdo) {
     return false;
 }
 
-function set(string $id, string $name, string $desc, PDO $pdo) : int {
-    $query = 'REPLACE INTO Category VALUES (:id, :name, :desc)';
+function set(string $id, string $name, string $desc, PDO $pdo, bool $replace = true) : int {
+    $query = ($replace ? 'REPLACE' : 'INSERT') . ' INTO Categories VALUES (:id, :name, :desc)';
     $values = [':id' => $id, ':name' => $name, ':desc' => $desc];
     $stmt = $pdo->prepare($query);
     $stmt->execute($values);
@@ -45,7 +45,7 @@ function set(string $id, string $name, string $desc, PDO $pdo) : int {
 }
 
 function delete(string $id, PDO $pdo) : int {
-    $query = 'DELETE FROM Category WHERE CategoryID = :id';
+    $query = 'DELETE FROM Categories WHERE CategoryID = :id';
     $values = [':id' => $id];
     $stmt = $pdo->prepare($query);
     $stmt->execute($values);

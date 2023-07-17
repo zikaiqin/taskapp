@@ -3,8 +3,8 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
 require_once 'classes/database.php';
 require_once 'classes/globals.php';
+require_once 'helpers/session.php';
 require_once 'util/url.php';
-require_once 'util/session.php';
 require_once 'actions/router.php';
 require_once 'views/router.php';
 
@@ -25,6 +25,7 @@ function main() {
         } else {
             Session\set(session_id(), $session_info['Username'], $_SERVER['REQUEST_TIME'], Database::get());
             Globals::set('USERNAME', $session_info['Username']);
+            Globals::set('PRIVILEGE', User\get_by_name($session_info['Username'], Database::get())['Privilege']);
         }
     }
 
