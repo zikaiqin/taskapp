@@ -27,7 +27,7 @@ class Router {
         if (count($path_arr) > 1) {
             endpoint_not_found:
             http_response_code(404);
-            echo 'Rien ici.';
+            echo 'Nothing here';
             die();
         }
 
@@ -36,7 +36,7 @@ class Router {
             if (!require_methods('GET')) die();
             if (($table = fetch_categories(Database::get())) === false) {
                 http_response_code(500);
-                echo 'Erreur de base de données.';
+                echo 'Database error';
                 die();
             }
             $res = json_encode(to_camel_case($table), JSON_UNESCAPED_UNICODE);
@@ -58,21 +58,21 @@ class Router {
                 if (!require_values($name = $_POST['name'])) die();
                 if (strlen($name) > 64) {
                     http_response_code(400);
-                    echo 'Le nom de la catégorie est trop long.';
+                    echo 'Category name is too long';
                     die();
                 }
 
                 # Name must be unique
                 if (get_category_by_name($name, Database::get()) !== false) {
                     http_response_code(403);
-                    echo 'Noms en double interdits.';
+                    echo 'Duplicate names not allowed';
                     die();
                 }
 
                 # Generate 128-bit uid
                 $category_id = bin2hex(random_bytes(16));
                 set_category($category_id, $name, $_POST['description'] ?? '', Database::get(), false);
-                echo 'Catégorie créée.';
+                echo 'Category created';
                 exit();
 
             case 'edit' :
@@ -89,7 +89,7 @@ class Router {
                 # Category must exist
                 if (($res = get_category_by_id($category_id, Database::get())) === false) {
                     http_response_code(404);
-                    echo 'Catégorie introuvable.';
+                    echo 'Category not found';
                     die();
                 }
 
@@ -98,19 +98,19 @@ class Router {
                     # Name must be no longer than 64 chars
                     if (strlen($name) > 64) {
                         http_response_code(400);
-                        echo 'Le nom de la catégorie est trop long.';
+                        echo 'Category name is too long';
                         die();
                     }
 
                     # Name must be unique
                     if (get_by_name($name, Database::get()) !== false) {
                         http_response_code(403);
-                        echo 'Noms en double interdits.';
+                        echo 'Duplicate names not allowed';
                         die();
                     }
                 } else if (!isset($_POST['description']) || ($res['Description'] === $_POST['description'])) {
                     http_response_code(200);
-                    echo 'Aucun changement.';
+                    echo 'No changes';
                     exit();
                 }
 
@@ -120,7 +120,7 @@ class Router {
                         $_POST['description'] ?? '',
                     Database::get(),
                 );
-                echo 'Catégorie modifiée.';
+                echo 'Category modified';
                 exit();
 
             case 'delete' :
@@ -137,11 +137,11 @@ class Router {
                 # Category must exist
                 if (delete_category($category_id, Database::get()) <= 0) {
                     http_response_code(404);
-                    echo 'Catégorie introuvable.';
+                    echo 'Category not found';
                     die();
                 }
 
-                echo 'Catégorie supprimée.';
+                echo 'Category deleted';
                 exit();
 
             default :

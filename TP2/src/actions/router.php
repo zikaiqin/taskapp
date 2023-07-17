@@ -12,7 +12,7 @@ class Router {
         if (count($path_arr) <= 0) {
             endpoint_not_found:
             http_response_code(404);
-            echo 'Rien ici.';
+            echo 'Nothing here';
             die();
         }
 

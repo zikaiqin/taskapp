@@ -25,7 +25,7 @@ class Router {
         if (count($path_arr) <= 0 || count($path_arr) > 1) {
             endpoint_not_found:
             http_response_code(404);
-            echo 'Rien ici.';
+            echo 'Nothing here';
             die();
         }
 
@@ -39,7 +39,7 @@ class Router {
 
                 delete_session(session_id(), Database::get());
                 session_destroy();
-                echo ' Déconnexion réussie.';
+                echo 'Logout success';
                 exit();
 
             case 'login':
@@ -132,7 +132,7 @@ class Router {
                 # Insert session ID into database, or replace if already exists
                 set_session(session_id(), $username, $_SERVER['REQUEST_TIME'], Database::get());
 
-                echo 'Inscription réussie';
+                echo 'Registration success';
                 exit();
 
             default :
