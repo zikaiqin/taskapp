@@ -56,13 +56,12 @@ class Router {
                 if (!require_values(
                     $username = $_POST['username'],
                     $email = $_POST['email'],
-                    $password = $_POST['password'],
                     $privilege = $_POST['privilege'],
                 )) die();
 
-                if (($pl = strlen($password) > 255) || strlen($email) > 255) {
+                if (strlen($email) > 255) {
                     http_response_code(400);
-                    echo ($pl ? 'Password' : 'Email') . ' is too long';
+                    echo 'Email is too long';
                     die();
                 }
 
@@ -88,7 +87,6 @@ class Router {
 
                 if (
                     $res['Email'] === $email &&
-                    $res['Password'] === $password &&
                     $res['Privilege'] === $privilege
                 ) {
                     http_response_code(200);
@@ -104,8 +102,7 @@ class Router {
                 }
 
                 # Update user with new info
-                $secret = password_hash($password, PASSWORD_DEFAULT);
-                set_user($username, $email, $secret, $privilege, Database::get());
+                set_user($username, $email, $res['Password'], $privilege, Database::get());
                 echo 'User modified';
                 exit();
 

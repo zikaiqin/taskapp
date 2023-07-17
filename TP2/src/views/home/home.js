@@ -26,11 +26,12 @@ const logout = () => {
 const buildProfile = () => {
     let el = $('#username').text(CONSTANTS['USERNAME']);
     let c = el.clone().removeClass('text-truncate').appendTo('body');
-    if (c.width() > el.width()) {
+    if (el.height() > c.height()) {
+        el.addClass('text-truncate');
         el.attr({
             'data-bs-toggle': 'tooltip',
-            'data-bs-placement': 'left',
             'data-bs-title': CONSTANTS['USERNAME'],
+            'data-bs-delay': '{"show":150,"hide":0}',
         });
         new bootstrap.Tooltip(el[0]);
     }
@@ -80,6 +81,7 @@ const buildNav = (state) => {
 
 const rebuildTable = async (state) => {
     $('#table-container').empty();
+    $('#modal-container').empty();
     switch (state.context) {
         case 'task':
             return buildTaskTable(state);
@@ -97,7 +99,8 @@ const buildUserTable = async (state) => {
         type: 'GET',
         error: () => { void 0; },
         success: (res) => {
-            state.data = Array.from(res);
+            state.tableData = Array.from(res);
+            let modal = setupUserEditModal();
             let table = buildTableFrame();
             let header = $(
                 `<tr>
@@ -108,10 +111,47 @@ const buildUserTable = async (state) => {
                 </tr>`
             );
             table.find('thead').append(header);
-            let body = table.find('tbody');
-            state.data.forEach(({ username, email, privilege }) => {
-                let row = $(
-                    `<tr class="align-middle">
+            buildUserRows(state, table, modal);
+            $('#table-container').append(table);
+        },
+    });
+};
+const setupUserEditModal = () => {
+    let modalQuery = buildUserEditModal();
+    $('#modal-container').append(modalQuery);
+    let modal = new bootstrap.Modal(modalQuery[0])
+
+    let form = modalQuery.find('form')
+    modalQuery.on('hidden.bs.modal', () => {
+        form.removeClass('was-validated');
+    })
+    $('#edit-modal-submit').on('click', () => {
+        if (!form[0].checkValidity()) {
+            form.addClass('was-validated');
+            return;
+        }
+        $.ajax('api/user/edit', {
+            type: 'POST',
+            data: {
+                username: $('#edit-form-username').val(),
+                email: $('#edit-form-email').val(),
+                privilege: $('#edit-form-privilege').val(),
+            },
+            error: () => {
+                form.addClass('was-validated');
+            },
+            success: () => {
+                modal.hide();
+            },
+        });
+    });
+    return modal;
+}
+const buildUserRows = (state, table, modal) => {
+    let body = table.find('tbody');
+    state.tableData.forEach(({ username, email, privilege }) => {
+        let row = $(
+            `<tr class="align-middle">
                         <td>${username}</td>
                         <td>${email}</td>
                         <td>${privilege === 1 ? 'Administrator' : 'User'}</td>
@@ -121,27 +161,31 @@ const buildUserTable = async (state) => {
                             </button>
                         </td>
                     </tr>`
-                );
-                body.append(row);
-            });
-            $('#table-container').append(table);
-        },
+        );
+        row.find('button').on('click', () => {
+            $('#edit-modal-label').text(`Modify user ${username}`);
+            $('#edit-form-username').val(username);
+            $('#edit-form-email').val(email);
+            $('#edit-form-privilege').val(privilege);
+            modal.show();
+        })
+        body.append(row);
     });
-};
+}
 
 const buildCategoryTable = async (state) => {
     return $.ajax('api/category', {
         type: 'GET',
         error: () => { void 0; },
         success: (res) => {
-            state.data = Array.from(res);
+            state.tableData = Array.from(res);
             let table = buildTableFrame();
             let header = $(
                 `<tr>
                     <th scope="col" style="display: none">Category ID</th>
                     <th scope="col">Name</th>
                     <th scope="col">Description</th>
-                    <th scope="col" class="row-actions">
+                    <th scope="col" class="row-actions pt-0">
                         <div class="table-header-actions">
                             <button class="btn btn-primary btn-sm border-0 rounded-pill flex-grow-1">
                                 <i class="bi bi-plus-lg"></i>
@@ -153,7 +197,7 @@ const buildCategoryTable = async (state) => {
             );
             table.find('thead').append(header);
             let body = table.find('tbody');
-            state.data.forEach(({ categoryID, name, description }) => {
+            state.tableData.forEach(({ categoryID, name, description }) => {
                 let row = $(
                     `<tr class="align-middle">
                         <th scope="row" style="display: none">${categoryID}</th>
@@ -191,34 +235,35 @@ const buildTaskTable = async (state) => {
             const categories = Array.from(c);
             const tasks = Array.from(res['tasks']);
             const assignees = Array.from(res['assignees']);
-            state.data = { categories, tasks, assignees };
+            state.tableData = { categories, tasks, assignees };
 
             let table = buildTableFrame();
             let header = $(
                 `<tr>
-                        <th scope="col" style="display: none">Task ID</th>
-                        <th scope="col" style="display: none">Creator</th>
-                        <th scope="col">Title</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Start Date</th>
-                        <th scope="col">Assignees</th>
-                        <th scope="col">Status</th>
-                        <th scope="col" class="row-actions">
-                            <div class="table-header-actions">
-                                <button class="btn btn-primary btn-sm border-0 rounded-pill flex-grow-1">
-                                    <i class="bi bi-plus-lg"></i>
-                                    <span>New</span>
-                                </button>
-                            </div>
-                        </th>
-                    </tr>`
+                    <th scope="col" style="display: none">Task ID</th>
+                    <th scope="col" style="display: none">Creator</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Start Date</th>
+                    <th scope="col">Assignees</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="row-actions pt-0">
+                        <div class="table-header-actions">
+                            <button class="btn btn-primary btn-sm border-0 rounded-pill flex-grow-1">
+                                <i class="bi bi-plus-lg"></i>
+                                <span>New</span>
+                            </button>
+                        </div>
+                    </th>
+                </tr>`
             );
             table.find('thead').append(header);
 
             const body = table.find('tbody');
             tasks.forEach(({ taskID, categoryID, creatorName, title, description, startDate, status }) => {
-                const categoryName = categories.find((row) => row['categoryID'] === categoryID)?.name;
+                const categoryName =
+                    categories.find((row) => row['categoryID'] === categoryID)?.name ?? '<Category not found>';
                 const assigned = assignees
                     .filter((row) => row['taskID'] === taskID)
                     .map((row) => row['username']);
@@ -231,7 +276,7 @@ const buildTaskTable = async (state) => {
                         <td>${categoryName}</td>
                         <td>${startDate}</td>
                         <td class="text-truncate">${assigned.join(', ')}</td>
-                        <td>${(CONSTANTS['TASK_STATUS'] ?? {})[status]}</td>
+                        <td>${(CONSTANTS['TASK_STATUS'] ?? {})[status] ?? '<Status not found>'}</td>
                         <td class="row-actions">
                            ${CONSTANTS['PRIVILEGE'] === 1 || creatorName === CONSTANTS['USERNAME'] ?
                             `<button class="btn btn-outline-light btn-sm border-0 rounded-circle">
@@ -249,6 +294,50 @@ const buildTaskTable = async (state) => {
         },
     });
 };
+
+const buildUserEditModal = () => $(
+    `<div id="edit-modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 id="edit-modal-label" class="modal-title text-truncate fs-5">Modify User</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form class="needs-validation" action="javascript:void 0" novalidate>
+                        <div class="mb-3">
+                            <label for="edit-form-username" class="col-form-label">Username</label>
+                            <input id="edit-form-username" type="text" class="form-control" disabled readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-email" class="col-form-label">Email</label>
+                            <input
+                                id="edit-form-email"
+                                type="email"
+                                class="form-control"
+                                pattern="[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$"
+                                maxlength="255"
+                                required
+                            >
+                            <div class="invalid-feedback">Please enter a valid email</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-privilege" class="col-form-label">Privilege</label>
+                            <select id="edit-form-privilege" class="form-select">
+                                <option value="0">User</option>
+                                <option value="1">Administrator</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button id="edit-modal-submit" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>`
+);
 
 const buildTableFrame = () => $(
     `<table class="mb-0 table table-dark">

@@ -1,7 +1,5 @@
 <?php
 namespace Request;
-use Exception;
-
 if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
 function require_methods(...$methods) : bool {
@@ -41,7 +39,7 @@ function require_privilege($actual, $expected) : bool {
     return true;
 }
 
-function to_camel_case(array $table) {
+function to_camel_case(array $table) : array {
     return array_map(function($row) {
         $acc = [];
         foreach ($row as $key => $value) {
