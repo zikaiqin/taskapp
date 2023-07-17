@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../classes/globals.php';
 require_once __DIR__ . '/../../helpers/assignee.php';
 require_once __DIR__ . '/../../helpers/category.php';
 require_once __DIR__ . '/../../helpers/task.php';
+require_once __DIR__ . '/../../helpers/update.php';
 require_once __DIR__ . '/../../helpers/user.php';
 require_once __DIR__ . '/../../util/request.php';
 use Database;
@@ -24,6 +25,7 @@ use function Task\fetch_all as fetch_tasks;
 use function Task\get as get_task_by_id;
 use function Task\set as set_task;
 use function Task\delete as delete_task;
+use function Update\set as set_update;
 use function User\fetch_all as fetch_users;
 
 class Router {
@@ -67,7 +69,6 @@ class Router {
 
                 # Must send 'categoryID', 'title', 'startDate', 'status' and 'assignees' as form-data
                 if (!require_values(
-                    $category_id = $_POST['categoryID'],
                     $title = $_POST['title'],
                     $raw_date = $_POST['startDate'],
                     $status = $_POST['status'],
@@ -103,7 +104,8 @@ class Router {
                 }
 
                 # Category must exist
-                if (get_category_by_id($category_id, Database::get()) === false) {
+                $category_id = $_POST['categoryID'] === '' ? null : $_POST['categoryID'];
+                if (isset($_POST['categoryID']) && get_category_by_id($category_id, Database::get()) === false) {
                     http_response_code(400);
                     echo 'Category does not exist';
                     die();
@@ -130,6 +132,14 @@ class Router {
 
                 # Assign task to all assignees
                 assign_to($task_id, Database::get(), ...$assignees);
+
+                $update = ['action' => 'add', 'users' => $assignees];
+                set_update(
+                    2,
+                    time(),
+                    json_encode($update, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    Database::get()
+                );
 
                 echo 'Task created';
                 exit();
@@ -229,6 +239,17 @@ class Router {
                 # Assign task to all assignees
                 assign_to($task_id, Database::get(), ...$assignees);
 
+                $notify = Globals::get('USERNAME') === $row['CreatorName'] ?
+                    $assignees :
+                    array_unique(array_merge($assignees, [$row['CreatorName']]));
+                $update = ['action' => 'edit', 'users' => $notify];
+                set_update(
+                    2,
+                    time(),
+                    json_encode($update, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    Database::get()
+                );
+
                 echo 'Task modified';
                 exit();
 
@@ -246,8 +267,23 @@ class Router {
                 if (Globals::get('USERNAME') !== $row['CreatorName'] &&
                     !require_privilege(Globals::get('PRIVILEGE'), 1)) die();
 
-                # Category must exist
+                $assignees = array_map(fn($r) => $r['Username'],
+                    array_filter(fetch_assignees(Database::get()), fn($s) => $s['TaskID'] === $task_id)
+                );
+
+                # Task must exist
                 if (delete_task($task_id, Database::get()) <= 0) goto task_not_found;
+
+                $notify = Globals::get('USERNAME') === $row['CreatorName'] ?
+                    $assignees :
+                    array_unique(array_merge($assignees, [$row['CreatorName']]));
+                $update = ['action' => 'delete', 'users' => $notify];
+                set_update(
+                    2,
+                    time(),
+                    json_encode($update, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    Database::get()
+                );
 
                 echo 'Task deleted';
                 exit();

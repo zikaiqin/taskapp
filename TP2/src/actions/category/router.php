@@ -5,6 +5,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 require_once __DIR__ . '/../../classes/database.php';
 require_once __DIR__ . '/../../classes/globals.php';
 require_once __DIR__ . '/../../helpers/category.php';
+require_once __DIR__ . '/../../helpers/update.php';
 require_once __DIR__ . '/../../util/request.php';
 use Database;
 use Globals;
@@ -19,6 +20,7 @@ use function Request\require_methods;
 use function Request\require_privilege;
 use function Request\require_values;
 use function Request\to_camel_case;
+use function Update\set as set_update;
 
 class Router {
     private function __construct() {}
@@ -72,6 +74,7 @@ class Router {
                 # Generate 128-bit uid
                 $category_id = bin2hex(random_bytes(16));
                 set_category($category_id, $name, $_POST['description'] ?? '', Database::get(), false);
+                set_update(1, time(), null, Database::get());
                 echo 'Category created';
                 exit();
 
@@ -120,6 +123,7 @@ class Router {
                         $_POST['description'] ?? '',
                     Database::get(),
                 );
+                set_update(1, time(), null, Database::get());
                 echo 'Category modified';
                 exit();
 
@@ -140,6 +144,7 @@ class Router {
                     echo 'Category not found';
                     die();
                 }
+                set_update(1, time(), null, Database::get());
 
                 echo 'Category deleted';
                 exit();

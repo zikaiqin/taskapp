@@ -5,6 +5,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 require_once __DIR__ . '/../../classes/database.php';
 require_once __DIR__ . '/../../classes/globals.php';
 require_once __DIR__ . '/../../helpers/session.php';
+require_once __DIR__ . '/../../helpers/update.php';
 require_once __DIR__ . '/../../helpers/user.php';
 require_once __DIR__ . '/../../util/request.php';
 use Database;
@@ -14,6 +15,7 @@ use function Session\delete as delete_session;
 use function Request\require_methods;
 use function Request\require_values;
 use function Request\require_authentication;
+use function Update\set as set_update;
 use function User\get_by_name as get_user_by_name;
 use function User\get_by_email as get_user_by_email;
 use function User\set as set_user;
@@ -128,6 +130,7 @@ class Router {
                 # Insert new non-admin user into database
                 $secret = password_hash($password, PASSWORD_DEFAULT);
                 set_user($username, $email, $secret, 0, Database::get(), false);
+                set_update(0, time(), null, Database::get());
 
                 # Insert session ID into database, or replace if already exists
                 set_session(session_id(), $username, $_SERVER['REQUEST_TIME'], Database::get());

@@ -4,6 +4,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 
 require_once __DIR__ . '/../../classes/database.php';
 require_once __DIR__ . '/../../classes/globals.php';
+require_once __DIR__ . '/../../helpers/update.php';
 require_once __DIR__ . '/../../helpers/user.php';
 require_once __DIR__ . '/../../util/request.php';
 use Database;
@@ -13,6 +14,7 @@ use function Request\require_values;
 use function Request\require_authentication;
 use function Request\require_privilege;
 use function Request\to_camel_case;
+use function Update\set as set_update;
 use function User\fetch_all as fetch_users;
 use function User\get_by_email as get_user_by_email;
 use function User\get_by_name as get_user_by_name;
@@ -103,6 +105,7 @@ class Router {
 
                 # Update user with new info
                 set_user($username, $email, $res['Password'], $privilege, Database::get());
+                set_update(0, time(), null, Database::get());
                 echo 'User modified';
                 exit();
 

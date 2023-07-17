@@ -4,6 +4,7 @@ if (isset($_GET['source'])) { die(highlight_file(__FILE__, 1)); }
 require_once __DIR__ . '/auth/router.php';
 require_once __DIR__ . '/category/router.php';
 require_once __DIR__ . '/task/router.php';
+require_once __DIR__ . '/update/router.php';
 require_once __DIR__ . '/user/router.php';
 
 class Router {
@@ -22,6 +23,9 @@ class Router {
                 exit();
             case 'user' :
                 User\Router::dispatch(array_slice($path_arr, 1));
+                exit();
+            case 'update' :
+                Update\Router::dispatch(array_slice($path_arr, 1));
                 exit();
             case 'category' :
                 Category\Router::dispatch(array_slice($path_arr, 1));

@@ -36,3 +36,9 @@ CREATE TABLE Assignees(
     FOREIGN KEY (TaskID) REFERENCES Tasks(TaskID) ON DELETE CASCADE,
     FOREIGN KEY (Username) REFERENCES Users(Username) ON DELETE CASCADE
 );
+
+CREATE TABLE Updates(
+    Type TINYINT(8) PRIMARY KEY,
+    Time INT(32) NOT NULL,
+    Data TEXT
+);

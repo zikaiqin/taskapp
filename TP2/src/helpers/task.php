@@ -27,8 +27,8 @@ function get(string $id, PDO $pdo) {
 
 function set(
     string $task_id,
-    string $category_id,
-    string $username,
+    $category_id,
+    $username,
     string $title,
     string $desc,
     string $date,
@@ -45,7 +45,7 @@ function set(
         ':title' => $title,
         ':desc' => $desc,
         ':date' => $date,
-        'stat' => $status,
+        ':stat' => $status,
     ];
     $stmt = $pdo->prepare($query);
     $stmt->execute($values);
