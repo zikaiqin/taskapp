@@ -56,9 +56,9 @@ const buildNav = (state) => {
     `);
 
     const title = {
-        task: 'Tasks',
-        category: 'Categories',
-        user: 'Users',
+        task: 'Tâches',
+        category: 'Catégories',
+        user: 'Utilisateurs',
     }
     navLinks.find('a').on('click', function() {
         const context = $(this).attr('data-context');
@@ -107,7 +107,7 @@ const buildUserTable = async (state) => {
                 `<tr>
                     <th scope="col">Nom d'utilisateur</th>
                     <th scope="col">Courriel</th>
-                    <th scope="col">Privilège</th>
+                    <th scope="col">Type d'utilisateur</th>
                     <th scope="col" class="row-actions"></th>
                 </tr>`
             );
@@ -143,16 +143,16 @@ const setupUserEditModal = () => {
                 switch (res.responseText.split(' ')[0]) {
                     case 'Email':
                         let emailInput = $('#edit-form-email');
-                        let hint = emailInput.siblings().find('div')
+                        let hint = emailInput.siblings().filter('div');
                         hint.text(res.responseText);
                         emailInput.addClass('is-invalid');
                         emailInput.one('change input', () => {
                             emailInput.removeClass('is-invalid');
-                            hint.text('Please enter a valid email');
+                            hint.text('Courriel invalide');
                         })
                         modalQuery.one('hidden.bs.modal', () => {
                             emailInput.removeClass('is-invalid');
-                            hint.text('Please enter a valid email');
+                            hint.text('Courriel invalide');
                         })
                         break;
                     case 'User':
@@ -180,7 +180,7 @@ const buildUserRows = (state, table, modal) => {
             `<tr class="align-middle">
                         <td>${username}</td>
                         <td>${email}</td>
-                        <td>${privilege === 1 ? 'Administrator' : 'User'}</td>
+                        <td>${CONSTANTS['USER_TYPE'] ? CONSTANTS['USER_TYPE'][privilege] : ''}</td>
                         <td class="row-actions">
                             <button class="btn btn-outline-light btn-sm border-0 rounded-circle">
                                 <i class="bi bi-pencil-fill"></i>
@@ -189,7 +189,7 @@ const buildUserRows = (state, table, modal) => {
                     </tr>`
         );
         row.find('button').on('click', () => {
-            $('#edit-modal-label').text(`Modify user ${username}`);
+            $('#edit-modal-label').text(`Modifier l'utilisateur ${username}`);
             $('#edit-form-username').val(username);
             $('#edit-form-email').val(email);
             $('#edit-form-privilege').val(privilege);
@@ -240,7 +240,7 @@ const buildCategoryTable = async (state) => {
                     </tr>`
                 );
                 row.find('.btn-outline-danger').on('click', () => {
-                    triggerDeleteModal(deleteModal, `Delete category ${name}?`, () => {
+                    triggerDeleteModal(deleteModal, `Voulez-vous supprimer la catégorie ${name}?`, () => {
                         $.ajax('api/category/delete', {
                             type: 'POST',
                             data: { categoryID },
@@ -344,7 +344,7 @@ const buildTaskRows = (state, table, deleteModal, editModal) => {
                     </tr>`
         );
         row.find('.btn-outline-danger').on('click', () => {
-            triggerDeleteModal(deleteModal, `Delete task ${title}?`, () => {
+            triggerDeleteModal(deleteModal, `Voulez-vous supprimer la tâche ${title}?`, () => {
                 $.ajax('api/task/delete', {
                     type: 'POST',
                     data: { taskID },
@@ -427,12 +427,12 @@ const buildDeleteModal = () => $(
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 id="delete-modal-label" class="modal-title text-truncate fs-5">Delete</h1>
+                    <h1 id="delete-modal-label" class="modal-title fs-5">Supprimer?</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button id="delete-modal-submit" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button id="delete-modal-submit" class="btn btn-danger" data-bs-dismiss="modal">Supprimer</button>
                 </div>
             </div>
         </div>
@@ -444,18 +444,18 @@ const buildUserEditModal = () => $(
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 id="edit-modal-label" class="modal-title text-truncate fs-5">Modify User</h1>
+                    <h1 id="edit-modal-label" class="modal-title fs-5">Modifier l'utilisateur</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form class="needs-validation" action="javascript:void 0" novalidate>
                         <div class="mb-3">
-                            <label for="edit-form-username" class="col-form-label">Username</label>
+                            <label for="edit-form-username" class="col-form-label">Nom d'utilisateur</label>
                             <input id="edit-form-username" type="text" class="form-control" disabled readonly>
-                            <div class="invalid-feedback">User does not exist</div>
+                            <div class="invalid-feedback">Cet utilisateur n'existe pas</div>
                         </div>
                         <div class="mb-3">
-                            <label for="edit-form-email" class="col-form-label">Email</label>
+                            <label for="edit-form-email" class="col-form-label">Courriel</label>
                             <input
                                 id="edit-form-email"
                                 type="email"
@@ -464,20 +464,22 @@ const buildUserEditModal = () => $(
                                 maxlength="255"
                                 required
                             >
-                            <div class="invalid-feedback">Please enter a valid email</div>
+                            <div class="invalid-feedback">Courriel invalide</div>
                         </div>
                         <div class="mb-3">
-                            <label for="edit-form-privilege" class="col-form-label">Privilege</label>
+                            <label for="edit-form-privilege" class="col-form-label">Type d'utilisateur</label>
                             <select id="edit-form-privilege" class="form-select">
-                                <option value="0">User</option>
-                                <option value="1">Administrator</option>
+                                ${CONSTANTS['USER_TYPE'] ?
+                                    CONSTANTS['USER_TYPE'].map((privilege, index) =>
+                                        `<option value="${index}">${privilege}</option>`
+                                    ).join('\n') : ''}
                             </select>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button id="edit-modal-submit" class="btn btn-primary">Save</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button id="edit-modal-submit" class="btn btn-primary">Sauvegarder</button>
                 </div>
             </div>
         </div>
@@ -495,22 +497,22 @@ const buildTaskFilterModal = () => $(
                 <div class="modal-body">
                     <form action="javascript:void 0" novalidate>
                         <div class="mb-3">
-                            <label for="filter-form-title" class="col-form-label">Titre:</label>
+                            <label for="filter-form-title" class="col-form-label">Titre</label>
                             <input id="filter-form-title" type="text" class="form-control" placeholder="Aucun filtre">
                         </div>
                         <div class="mb-3">
-                            <label for="filter-form-category" class="col-form-label">Nom de catégorie:</label>
+                            <label for="filter-form-category" class="col-form-label">Nom de catégorie</label>
                             <input id="filter-form-category" type="text" class="form-control" placeholder="Aucun filtre">
                         </div>
                         <div class="mb-3">
-                            <label for="edit-form-assignees" class="col-form-label">Destinataires:</label>
+                            <label for="edit-form-assignees" class="col-form-label">Destinataires</label>
                             <select id="filter-form-assignees" class="form-select mb-2">
                                 <option value="-1" selected>Tous</option>
                                 <option value="0">Incluant moi</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="filter-form-range" class="col-form-label">Date de début:</label>
+                            <label for="filter-form-range" class="col-form-label">Date de début</label>
                             <select id="filter-form-range" class="form-select mb-2">
                                 <option value="-1" selected>Tous</option>
                                 <option value="0">Avant</option>
@@ -524,7 +526,7 @@ const buildTaskFilterModal = () => $(
                             >
                         </div>
                         <div class="mb-3">
-                            <label for="filter-form-status" class="col-form-label">Statut:</label>
+                            <label for="filter-form-status" class="col-form-label">Statut</label>
                             <select id="filter-form-status" class="form-select">
                                 <option value="-1" selected>Tous</option>
                                 ${CONSTANTS['TASK_STATUS'] ?
