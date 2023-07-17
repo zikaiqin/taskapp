@@ -179,6 +179,7 @@ const buildCategoryTable = async (state) => {
         error: () => { void 0; },
         success: (res) => {
             state.tableData = Array.from(res);
+            let deleteModal = setupDeleteModal();
             let table = buildTableFrame();
             let header = $(
                 `<tr>
@@ -213,6 +214,14 @@ const buildCategoryTable = async (state) => {
                         </td>
                     </tr>`
                 );
+                row.find('.btn-outline-danger').on('click', () => {
+                    triggerDeleteModal(deleteModal, `Delete category ${name}?`, () => {
+                        $.ajax('api/category/delete', {
+                            type: 'POST',
+                            data: { categoryID },
+                        });
+                    });
+                });
                 body.append(row);
             });
             $('#table-container').append(table);
@@ -237,6 +246,7 @@ const buildTaskTable = async (state) => {
             const assignees = Array.from(res['assignees']);
             state.tableData = { categories, tasks, assignees };
 
+            let deleteModal = setupDeleteModal();
             let table = buildTableFrame();
             let header = $(
                 `<tr>
@@ -288,12 +298,54 @@ const buildTaskTable = async (state) => {
                         </td>
                     </tr>`
                 );
+                row.find('.btn-outline-danger').on('click', () => {
+                    triggerDeleteModal(deleteModal, `Delete task ${title}?`, () => {
+                        $.ajax('api/task/delete', {
+                            type: 'POST',
+                            data: { taskID },
+                        });
+                    });
+                });
                 body.append(row);
             });
             $('#table-container').append(table);
         },
     });
 };
+
+const setupDeleteModal = () => {
+    let modalQuery = buildDeleteModal();
+    modalQuery.on('hidden.bs.modal', () => {
+        modalQuery.find('#delete-modal-submit').off('click');
+    })
+    $('#modal-container').append(modalQuery);
+    return new bootstrap.Modal(modalQuery[0]);
+}
+
+const triggerDeleteModal = (modal, message, callback) => {
+    $('#delete-modal-label').text(message);
+    $('#delete-modal-submit').on('click', () => {
+        callback();
+    });
+    modal.show();
+}
+
+const buildDeleteModal = () => $(
+    `<div id="delete-modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 id="delete-modal-label" class="modal-title text-truncate fs-5">Delete</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button id="delete-modal-submit" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>`
+);
 
 const buildUserEditModal = () => $(
     `<div id="edit-modal" class="modal fade" tabindex="-1">
