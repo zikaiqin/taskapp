@@ -67,7 +67,7 @@ class Router {
 
                 if (!is_numeric($privilege) || ($privilege = (int) $privilege) < 0 || $privilege > 1) {
                     http_response_code(400);
-                    echo 'Invalid privilege level';
+                    echo 'Privilege is invalid';
                     die();
                 }
 

@@ -1,7 +1,8 @@
 try { CONSTANTS } catch { CONSTANTS = Object.freeze({'USERNAME': '<Username>', 'PRIVILEGE': 0}) }
 jQuery(() => {
     const state = {
-        context: 'task'
+        context: 'task',
+        tableFilters: {},
     }
     buildNav(state);
     $('#profile').one('click', () => {
@@ -137,8 +138,32 @@ const setupUserEditModal = () => {
                 email: $('#edit-form-email').val(),
                 privilege: $('#edit-form-privilege').val(),
             },
-            error: () => {
-                form.addClass('was-validated');
+            error: (res) => {
+                form.removeClass('was-validated');
+                switch (res.responseText.split(' ')[0]) {
+                    case 'Email':
+                        let emailInput = $('#edit-form-email');
+                        let hint = emailInput.siblings().find('div')
+                        hint.text(res.responseText);
+                        emailInput.addClass('is-invalid');
+                        emailInput.one('change input', () => {
+                            emailInput.removeClass('is-invalid');
+                            hint.text('Please enter a valid email');
+                        })
+                        modalQuery.one('hidden.bs.modal', () => {
+                            emailInput.removeClass('is-invalid');
+                            hint.text('Please enter a valid email');
+                        })
+                        break;
+                    case 'User':
+                        $('#edit-modal-submit').prop('disabled', true);
+                        let usernameInput = $('#edit-form-username');
+                        usernameInput.addClass('is-invalid');
+                        modalQuery.one('hidden.bs.modal', () => {
+                            usernameInput.removeClass('is-invalid');
+                        })
+                        break;
+                }
             },
             success: () => {
                 modal.hide();
@@ -149,6 +174,7 @@ const setupUserEditModal = () => {
 }
 const buildUserRows = (state, table, modal) => {
     let body = table.find('tbody');
+    body.empty();
     state.tableData.forEach(({ username, email, privilege }) => {
         let row = $(
             `<tr class="align-middle">
@@ -188,9 +214,8 @@ const buildCategoryTable = async (state) => {
                     <th scope="col">Description</th>
                     <th scope="col" class="row-actions pt-0">
                         <div class="table-header-actions">
-                            <button class="btn btn-primary btn-sm border-0 rounded-pill flex-grow-1">
+                            <button class="btn btn-primary btn-sm border-0 rounded-circle">
                                 <i class="bi bi-plus-lg"></i>
-                                <span>New</span>
                             </button>
                         </div>
                     </th>
@@ -247,6 +272,7 @@ const buildTaskTable = async (state) => {
             state.tableData = { categories, tasks, assignees };
 
             let deleteModal = setupDeleteModal();
+            let filterModal = setupTaskFilterModal(state);
             let table = buildTableFrame();
             let header = $(
                 `<tr>
@@ -259,37 +285,56 @@ const buildTaskTable = async (state) => {
                     <th scope="col">Assignees</th>
                     <th scope="col">Status</th>
                     <th scope="col" class="row-actions pt-0">
-                        <div class="table-header-actions">
-                            <button class="btn btn-primary btn-sm border-0 rounded-pill flex-grow-1">
-                                <i class="bi bi-plus-lg"></i>
-                                <span>New</span>
-                            </button>
-                        </div>
+                        <button class="btn btn-outline-light btn-sm border-0 rounded-circle">
+                            <i class="bi bi-funnel-fill"></i>
+                        </button>
+                        <button class="btn btn-primary btn-sm border-0 rounded-circle">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
                     </th>
                 </tr>`
             );
+            header.find('.btn-outline-light').on('click', () => {
+                filterModal.show();
+            });
             table.find('thead').append(header);
+            buildTaskRows(state, table, deleteModal);
 
-            const body = table.find('tbody');
-            tasks.forEach(({ taskID, categoryID, creatorName, title, description, startDate, status }) => {
-                const categoryName =
-                    categories.find((row) => row['categoryID'] === categoryID)?.name ?? '<Category not found>';
-                const assigned = assignees
-                    .filter((row) => row['taskID'] === taskID)
-                    .map((row) => row['username']);
-                let row = $(
-                    `<tr class="align-middle">
+            $(document).on('refresh.table', () => {
+                buildTaskRows(state, table, deleteModal);
+            })
+
+            $('#table-container').append(table);
+        },
+    });
+};
+
+const buildTaskRows = (state, table, deleteModal, editModal) => {
+    let body = table.find('tbody');
+    body.empty();
+    state.tableData.tasks.forEach(({ taskID, categoryID, creatorName, title, description, startDate, status }) => {
+        const categoryName = state.tableData.categories
+            .find((row) => row['categoryID'] === categoryID)?.name ?? '<Category not found>';
+        const assignees = state.tableData.assignees
+            .filter((row) => row['taskID'] === taskID)
+            .map((row) => row['username']);
+
+        const filtered = isTaskFiltered({title, categoryName, assignees, startDate, status}, state.tableFilters);
+        if (filtered) return;
+
+        let row = $(
+            `<tr class="align-middle">
                         <th scope="row" style="display: none">${taskID}</th>
                         <td style="display: none">${creatorName}</td>
                         <td>${title}</td>
                         <td class="text-truncate">${description}</td>
                         <td>${categoryName}</td>
                         <td>${startDate}</td>
-                        <td class="text-truncate">${assigned.join(', ')}</td>
-                        <td>${(CONSTANTS['TASK_STATUS'] ?? {})[status] ?? '<Status not found>'}</td>
+                        <td class="text-truncate">${assignees.join(', ')}</td>
+                        <td>${CONSTANTS['TASK_STATUS']?.at(status) ?? '<Status not found>'}</td>
                         <td class="row-actions">
                            ${CONSTANTS['PRIVILEGE'] === 1 || creatorName === CONSTANTS['USERNAME'] ?
-                            `<button class="btn btn-outline-light btn-sm border-0 rounded-circle">
+                `<button class="btn btn-outline-light btn-sm border-0 rounded-circle">
                                 <i class="bi bi-pencil-fill"></i>
                             </button>
                             <button class="btn btn-outline-danger btn-sm border-0 rounded-circle">
@@ -297,21 +342,68 @@ const buildTaskTable = async (state) => {
                             </button>` : ''}
                         </td>
                     </tr>`
-                );
-                row.find('.btn-outline-danger').on('click', () => {
-                    triggerDeleteModal(deleteModal, `Delete task ${title}?`, () => {
-                        $.ajax('api/task/delete', {
-                            type: 'POST',
-                            data: { taskID },
-                        });
-                    });
+        );
+        row.find('.btn-outline-danger').on('click', () => {
+            triggerDeleteModal(deleteModal, `Delete task ${title}?`, () => {
+                $.ajax('api/task/delete', {
+                    type: 'POST',
+                    data: { taskID },
                 });
-                body.append(row);
             });
-            $('#table-container').append(table);
-        },
+        });
+        body.append(row);
     });
-};
+}
+
+const isTaskFiltered = (row, filters) =>  (
+        (filters.title && !row.title.includes(filters.title)) ||
+        (filters.category && !row.categoryName.includes(filters.category)) ||
+        (filters.assignees === 0 && !row.assignees.includes(CONSTANTS['USERNAME'])) ||
+        (filters.status !== undefined && filters.status !== -1 && row.status !== filters.status) ||
+        (filters.range !== undefined && filters.range !== -1 &&
+            (filters.range === 0 ? row.startDate > filters.date : row.startDate < filters.date))
+);
+
+const setupTaskFilterModal = (state) => {
+    let modalQuery = buildTaskFilterModal();
+    let form = modalQuery.find('form');
+
+    form.find('#filter-form-range').on('change', function() {
+       if (Number($(this).val()) === -1) {
+           form.find('#filter-form-date').hide();
+       } else {
+           form.find('#filter-form-date').show();
+       }
+    });
+    modalQuery.find('#filter-modal-submit').on('click', () => {
+        form.find(':input').each(function() {
+            const prop = $(this).attr('id').split('-').at(-1);
+            state.tableFilters[prop] =
+                $(this).is('select') ? Number($(this).val()) : $(this).val();
+        });
+        $(document).trigger('refresh.table');
+    });
+    modalQuery.find('#filter-modal-clear').on('click', () => {
+        state.tableFilters = {};
+        $(document).trigger('refresh.table');
+    });
+    modalQuery.on('show.bs.modal', () => {
+        Object.entries(state.tableFilters).forEach(([key, value]) => {
+            form.find(`#filter-form-${key}`).val(value);
+        });
+        if (Number(form.find('#filter-form-range').val()) === -1) {
+            form.find('#filter-form-date').hide();
+        }
+    });
+    modalQuery.on('hidden.bs.modal', () => {
+        form.find('select').val(-1);
+        form.find('input').val('')
+            .filter('#filter-form-date').val(new Date().toLocaleDateString('en-CA'));
+    });
+
+    $('#modal-container').append(modalQuery);
+    return new bootstrap.Modal(modalQuery[0]);
+}
 
 const setupDeleteModal = () => {
     let modalQuery = buildDeleteModal();
@@ -360,6 +452,7 @@ const buildUserEditModal = () => $(
                         <div class="mb-3">
                             <label for="edit-form-username" class="col-form-label">Username</label>
                             <input id="edit-form-username" type="text" class="form-control" disabled readonly>
+                            <div class="invalid-feedback">User does not exist</div>
                         </div>
                         <div class="mb-3">
                             <label for="edit-form-email" class="col-form-label">Email</label>
@@ -385,6 +478,67 @@ const buildUserEditModal = () => $(
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button id="edit-modal-submit" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>`
+);
+
+const buildTaskFilterModal = () => $(
+    `<div id="filter-modal" class="modal fade" tabindex="-1" xmlns="http://www.w3.org/1999/html">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 id="edit-modal-label" class="modal-title text-truncate fs-5">Filtres</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="javascript:void 0" novalidate>
+                        <div class="mb-3">
+                            <label for="filter-form-title" class="col-form-label">Titre:</label>
+                            <input id="filter-form-title" type="text" class="form-control" placeholder="Aucun filtre">
+                        </div>
+                        <div class="mb-3">
+                            <label for="filter-form-category" class="col-form-label">Nom de catégorie:</label>
+                            <input id="filter-form-category" type="text" class="form-control" placeholder="Aucun filtre">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-assignees" class="col-form-label">Destinataires:</label>
+                            <select id="filter-form-assignees" class="form-select mb-2">
+                                <option value="-1" selected>Tous</option>
+                                <option value="0">Incluant moi</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="filter-form-range" class="col-form-label">Date de début:</label>
+                            <select id="filter-form-range" class="form-select mb-2">
+                                <option value="-1" selected>Tous</option>
+                                <option value="0">Avant</option>
+                                <option value="1">Après</option>
+                            </select>
+                            <input
+                                id="filter-form-date"
+                                type="date"
+                                class="form-control"
+                                value="${new Date().toLocaleDateString('en-CA')}"
+                            >
+                        </div>
+                        <div class="mb-3">
+                            <label for="filter-form-status" class="col-form-label">Statut:</label>
+                            <select id="filter-form-status" class="form-select">
+                                <option value="-1" selected>Tous</option>
+                                ${CONSTANTS['TASK_STATUS'] ?
+                                    CONSTANTS['TASK_STATUS'].map((status, index) =>
+                                        `<option value="${index}">${status}</option>`
+                                    ).join('\n') : ''}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button id="filter-modal-submit" class="btn btn-primary" data-bs-dismiss="modal">Sauvegarder</button>
+                    <button id="filter-modal-clear" class="btn btn-danger" data-bs-dismiss="modal">Tout effacer</button>
                 </div>
             </div>
         </div>

@@ -33,7 +33,7 @@ function require_authentication($username) : bool {
 function require_privilege($actual, $expected) : bool {
     if (!is_numeric($actual) || ((int) $actual !== $expected)) {
         http_response_code(403);
-        echo 'Not allowed';
+        echo 'Privilege is insufficient';
         return false;
     }
     return true;
