@@ -43,13 +43,13 @@ const buildNav = (state) => {
     }
     let navLinks = $(`
         <li class="nav-item">
-            <a class="nav-link active" role="button" data-context="task">Tasks</a>
+            <a class="nav-link active" role="button" data-context="task">Tâches</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" role="button" data-context="category">Categories</a>
+            <a class="nav-link" role="button" data-context="category">Catégories</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" role="button" data-context="user">Users</a>
+            <a class="nav-link" role="button" data-context="user">Utilisateurs</a>
         </li>
     `);
 
@@ -101,9 +101,9 @@ const buildUserTable = async (state) => {
             let table = buildTableFrame();
             let header = $(
                 `<tr>
-                    <th scope="col">Username</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Privilege</th>
+                    <th scope="col">Nom d'utilisateur</th>
+                    <th scope="col">Courriel</th>
+                    <th scope="col">Privilège</th>
                     <th scope="col" class="row-actions"></th>
                 </tr>`
             );
@@ -138,14 +138,14 @@ const buildCategoryTable = async (state) => {
             let table = buildTableFrame();
             let header = $(
                 `<tr>
-                    <th scope="col" style="display: none">Category ID</th>
-                    <th scope="col">Name</th>
+                    <th scope="col" style="display: none">ID de catégorie</th>
+                    <th scope="col">Nom</th>
                     <th scope="col">Description</th>
                     <th scope="col" class="row-actions">
                         <div class="table-header-actions">
                             <button class="btn btn-primary btn-sm border-0 rounded-pill flex-grow-1">
                                 <i class="bi bi-plus-lg"></i>
-                                <span>New</span>
+                                <span>Nouveau</span>
                             </button>
                         </div>
                     </th>
@@ -196,19 +196,19 @@ const buildTaskTable = async (state) => {
             let table = buildTableFrame();
             let header = $(
                 `<tr>
-                        <th scope="col" style="display: none">Task ID</th>
-                        <th scope="col" style="display: none">Creator</th>
-                        <th scope="col">Title</th>
+                        <th scope="col" style="display: none">ID de tâche</th>
+                        <th scope="col" style="display: none">Créateur</th>
+                        <th scope="col">Titre</th>
                         <th scope="col">Description</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Start Date</th>
-                        <th scope="col">Assignees</th>
-                        <th scope="col">Status</th>
+                        <th scope="col">Catégorie</th>
+                        <th scope="col">Date de début</th>
+                        <th scope="col">Destinataires</th>
+                        <th scope="col">Statut</th>
                         <th scope="col" class="row-actions">
                             <div class="table-header-actions">
                                 <button class="btn btn-primary btn-sm border-0 rounded-pill flex-grow-1">
                                     <i class="bi bi-plus-lg"></i>
-                                    <span>New</span>
+                                    <span>Nouveau</span>
                                 </button>
                             </div>
                         </th>
