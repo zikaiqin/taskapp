@@ -206,11 +206,12 @@ const buildCategoryTable = async (state) => {
         success: (res) => {
             state.tableData = Array.from(res);
             let deleteModal = setupDeleteModal();
+            let editModal = setupCategoryEditModal(state);
             let table = buildTableFrame();
             let header = $(
                 `<tr>
                     <th scope="col" style="display: none">ID de catégorie</th>
-                    <th scope="col">Nom</th>
+                    <th scope="col">Nom de catégorie</th>
                     <th scope="col">Description</th>
                     <th scope="col" class="row-actions pt-0">
                         <div class="table-header-actions">
@@ -221,38 +222,96 @@ const buildCategoryTable = async (state) => {
                     </th>
                 </tr>`
             );
-            table.find('thead').append(header);
-            let body = table.find('tbody');
-            state.tableData.forEach(({ categoryID, name, description }) => {
-                let row = $(
-                    `<tr class="align-middle">
-                        <th scope="row" style="display: none">${categoryID}</th>
-                        <td>${name}</td>
-                        <td class="text-truncate">${description}</td>
-                        <td class="row-actions">
-                            <button class="btn btn-outline-light btn-sm border-0 rounded-circle">
-                                <i class="bi bi-pencil-fill"></i>
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm border-0 rounded-circle">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                        </td>
-                    </tr>`
-                );
-                row.find('.btn-outline-danger').on('click', () => {
-                    triggerDeleteModal(deleteModal, `Voulez-vous supprimer la catégorie ${name}?`, () => {
-                        $.ajax('api/category/delete', {
-                            type: 'POST',
-                            data: { categoryID },
-                        });
-                    });
-                });
-                body.append(row);
+            header.find('.btn-primary').on('click', () => {
+                editModal.show();
             });
+            table.find('thead').append(header);
+            buildCategoryRows(state, table, deleteModal, editModal);
             $('#table-container').append(table);
         },
     });
 };
+
+const buildCategoryRows = (state, table, deleteModal, editModal) => {
+    let body = table.find('tbody');
+    state.tableData.forEach(({ categoryID, name, description }) => {
+        let row = $(
+            `<tr class="align-middle">
+                <th scope="row" style="display: none">${categoryID}</th>
+                <td>${name}</td>
+                <td class="text-truncate">${description}</td>
+                <td class="row-actions">
+                    <button class="btn btn-outline-light btn-sm border-0 rounded-circle">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm border-0 rounded-circle">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </td>
+            </tr>`
+        );
+        row.find('.btn-outline-light').on('click', () => {
+            $('#edit-modal').attr('data-id', categoryID);
+            editModal.show();
+        });
+        row.find('.btn-outline-danger').on('click', () => {
+            triggerDeleteModal(deleteModal, `Voulez-vous supprimer la catégorie ${name}?`, () => {
+                $.ajax('api/category/delete', {
+                    type: 'POST',
+                    data: { categoryID },
+                });
+            });
+        });
+        body.append(row);
+    });
+}
+
+const setupCategoryEditModal = (state) => {
+    let modalQuery = buildCategoryEditModal();
+    let form = modalQuery.find('form');
+
+    modalQuery.on('show.bs.modal', () => {
+        const category = state.tableData.find(
+            (row) => row.categoryID === modalQuery.attr('data-id'),
+        );
+        modalQuery.find('#edit-modal-label').text(
+            category?.name ? `Modification de la catégorie ${category.name}` : 'Créer une catégorie',
+        );
+        form.find('#edit-form-name').val(category?.name ?? '');
+        form.find('#edit-form-description').val(category?.description ?? '');
+    });
+
+    modalQuery.on('hidden.bs.modal', () => {
+        modalQuery.removeAttr('data-id');
+    });
+
+    $('#modal-container').append(modalQuery);
+    let modal = new bootstrap.Modal(modalQuery[0]);
+
+    $('#edit-modal-submit').on('click', () => {
+        if (!form[0].checkValidity()) {
+            form.addClass('was-validated');
+            return;
+        }
+        const categoryID = modalQuery.attr('data-id') ?? null;
+        const action = categoryID ? 'edit' : 'add';
+        $.ajax(`api/category/${action}`, {
+            type: 'POST',
+            data: {
+                categoryID,
+                name: $('#edit-form-name').val(),
+                description: $('#edit-form-description').val(),
+            },
+            error: (res) => {
+                form.removeClass('was-validated');
+            },
+            success: () => {
+                modal.hide();
+            },
+        });
+    });
+    return modal;
+}
 
 const buildTaskTable = async (state) => {
     return $.ajax('api/task', {
@@ -616,6 +675,35 @@ const buildUserEditModal = () => $(
                                         `<option value="${index}">${privilege}</option>`
                                     ).join('\n') : ''}
                             </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button id="edit-modal-submit" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </div>
+        </div>
+    </div>`
+);
+
+const buildCategoryEditModal = () => $(
+    `<div id="edit-modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 id="edit-modal-label" class="modal-title text-truncate fs-5">Modification de la catégorie</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="javascript:void 0" novalidate>
+                        <div class="mb-3">
+                            <label for="edit-form-name" class="col-form-label">Nom de catégorie</label>
+                            <input id="edit-form-name" type="text" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-description" class="col-form-label">Description</label>
+                            <textarea id="edit-form-description" class="form-control"></textarea>
                         </div>
                     </form>
                 </div>
