@@ -189,7 +189,7 @@ const buildUserRows = (state, table, modal) => {
                     </tr>`
         );
         row.find('button').on('click', () => {
-            $('#edit-modal-label').text(`Modifier l'utilisateur ${username}`);
+            $('#edit-modal-label').text(`Modification de l'utilisateur ${username}`);
             $('#edit-form-username').val(username);
             $('#edit-form-email').val(email);
             $('#edit-form-privilege').val(privilege);
@@ -272,7 +272,9 @@ const buildTaskTable = async (state) => {
             state.tableData = { categories, tasks, assignees };
 
             let deleteModal = setupDeleteModal();
+            let editModal = setupTaskEditModal(state);
             let filterModal = setupTaskFilterModal(state);
+
             let table = buildTableFrame();
             let header = $(
                 `<tr>
@@ -297,11 +299,14 @@ const buildTaskTable = async (state) => {
             header.find('.btn-outline-light').on('click', () => {
                 filterModal.show();
             });
+            header.find('.btn-primary').on('click', () => {
+                editModal.show();
+            });
             table.find('thead').append(header);
-            buildTaskRows(state, table, deleteModal);
+            buildTaskRows(state, table, deleteModal, editModal);
 
             $(document).on('refresh.table', () => {
-                buildTaskRows(state, table, deleteModal);
+                buildTaskRows(state, table, deleteModal, editModal);
             })
 
             $('#table-container').append(table);
@@ -334,7 +339,7 @@ const buildTaskRows = (state, table, deleteModal, editModal) => {
                         <td>${CONSTANTS['TASK_STATUS']?.at(status) ?? '<Status not found>'}</td>
                         <td class="row-actions">
                            ${CONSTANTS['PRIVILEGE'] === 1 || creatorName === CONSTANTS['USERNAME'] ?
-                `<button class="btn btn-outline-light btn-sm border-0 rounded-circle">
+                            `<button class="btn btn-outline-light btn-sm border-0 rounded-circle">
                                 <i class="bi bi-pencil-fill"></i>
                             </button>
                             <button class="btn btn-outline-danger btn-sm border-0 rounded-circle">
@@ -343,6 +348,10 @@ const buildTaskRows = (state, table, deleteModal, editModal) => {
                         </td>
                     </tr>`
         );
+        row.find('.btn-outline-light').on('click', () => {
+            $('#edit-modal').attr('data-id', taskID);
+            editModal.show();
+        });
         row.find('.btn-outline-danger').on('click', () => {
             triggerDeleteModal(deleteModal, `Voulez-vous supprimer la tâche ${title}?`, () => {
                 $.ajax('api/task/delete', {
@@ -363,6 +372,139 @@ const isTaskFiltered = (row, filters) =>  (
         (filters.range !== undefined && filters.range !== -1 &&
             (filters.range === 0 ? row.startDate > filters.date : row.startDate < filters.date))
 );
+
+const setupTaskEditModal = (state) => {
+    let modalQuery = buildTaskEditModal();
+    let form = modalQuery.find('form');
+    let rebuildDropdown;
+    let addBadge = (username, rebuild = true) => {
+        let assigneesPreview = form.find('#edit-form-assignees-preview');
+        let badge = $(
+            `<span class="badge bg-secondary align-middle username-label">
+                ${username}
+                <button
+                    class="btn btn-secondary btn-sm border-0 rounded-circle"
+                    style="--bs-btn-padding-y: 0; --bs-btn-padding-x: 3.5px;"
+                ><i class="bi bi-x"></i></button>
+            </span>`
+        );
+        badge.find('button').on('click', function() {
+            state.modalData.assignees =
+                state.modalData.assignees.filter((name) => name !== username);
+            $(this).parent().remove();
+            rebuildDropdown();
+        });
+        assigneesPreview.append(badge);
+        if (rebuild) rebuildDropdown();
+    }
+
+    rebuildDropdown = () => {
+        const users = state.modalData.users.filter(
+            (username) => !state.modalData.assignees.includes(username),
+        );
+        let button = $('#edit-form-assignees-add').show();
+        let dropdown = form.find('#edit-form-assignees-dropdown');
+        if (users.length === 0) {
+            button.hide();
+            return;
+        }
+        dropdown.empty();
+        users.forEach((username) => {
+            let item = $(`<li><a class="dropdown-item" role="button">${username}</a></li>`);
+            item.on('click', function() {
+                state.modalData.assignees.push(username);
+                addBadge(username);
+            });
+            dropdown.append(item);
+        });
+        new bootstrap.Dropdown(button[0]);
+    }
+
+    modalQuery.on('show.bs.modal', async () => {
+        state.modalData = {};
+        await new Promise((resolve) => {
+            $.ajax('api/user', {
+                type: 'GET',
+                success: (res) => {
+                    state.modalData.users = res.map((row) => row['username']);
+                    resolve();
+                },
+                error: () => {
+                    state.modalData.users = [];
+                    resolve();
+                },
+            })
+        });
+        const task = state.tableData.tasks.find(
+            (row) => row.taskID === modalQuery.attr('data-id'),
+        );
+        modalQuery.find('#edit-modal-label').text(
+            task?.title ? `Modification de la tâche ${task.title}` : 'Créer une tâche',
+        );
+        form.find('#edit-form-title').val(task?.title ?? '');
+        form.find('#edit-form-description').val(task?.description ?? '');
+        form.find('#edit-form-status').val(task?.status ?? 0);
+
+        let categorySelect = form.find('#edit-form-category');
+        state.tableData.categories.forEach((row) => {
+            let option =
+                $(`<option value="${row.categoryID}"
+                        ${task?.categoryID === row.categoryID ? ' selected' : ''}>${row.name}</option>`);
+            categorySelect.append(option);
+        });
+
+        let dateInput = form.find('#edit-form-date');
+        dateInput.val(task?.startDate ?? new Date().toLocaleDateString('en-CA'));
+
+        state.modalData.assignees = state.tableData.assignees
+            .filter((row) => row['taskID'] === task?.taskID)
+            .map((row) => row['username']);
+        if (state.modalData.assignees.length > 0) {
+            state.modalData.assignees.forEach(
+                (assignee) => { addBadge(assignee, false) }
+            );
+        }
+        rebuildDropdown();
+    });
+
+    modalQuery.on('hidden.bs.modal', () => {
+        form.find('#edit-form-category').empty();
+        form.find('#edit-form-assignees-preview').empty();
+        modalQuery.removeAttr('data-id');
+        delete state.modalData;
+    });
+
+    $('#modal-container').append(modalQuery);
+    let modal = new bootstrap.Modal(modalQuery[0]);
+
+    $('#edit-modal-submit').on('click', () => {
+        if (!form[0].checkValidity()) {
+            form.addClass('was-validated');
+            return;
+        }
+        const taskID = modalQuery.attr('data-id') ?? null;
+        const action = taskID ? 'edit' : 'add';
+        $.ajax(`api/task/${action}`, {
+            type: 'POST',
+            data: {
+                taskID,
+                categoryID: $('#edit-form-category').val(),
+                title: $('#edit-form-title').val(),
+                description: $('#edit-form-description').val(),
+                startDate: $('#edit-form-date').val(),
+                status: $('#edit-form-status').val(),
+                assignees: JSON.stringify(state.modalData.assignees),
+            },
+            error: (res) => {
+                form.removeClass('was-validated');
+            },
+            success: () => {
+                modal.hide();
+            },
+        });
+    });
+    return modal;
+}
 
 const setupTaskFilterModal = (state) => {
     let modalQuery = buildTaskFilterModal();
@@ -444,7 +586,7 @@ const buildUserEditModal = () => $(
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 id="edit-modal-label" class="modal-title fs-5">Modifier l'utilisateur</h1>
+                    <h1 id="edit-modal-label" class="modal-title fs-5">Modification de l'utilisateur</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -486,12 +628,79 @@ const buildUserEditModal = () => $(
     </div>`
 );
 
-const buildTaskFilterModal = () => $(
-    `<div id="filter-modal" class="modal fade" tabindex="-1" xmlns="http://www.w3.org/1999/html">
+const buildTaskEditModal = () => $(
+    `<div id="edit-modal" class="modal fade" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 id="edit-modal-label" class="modal-title text-truncate fs-5">Filtres</h1>
+                    <h1 id="edit-modal-label" class="modal-title text-truncate fs-5">Modification de la tâche</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="javascript:void 0" novalidate>
+                        <div class="mb-3">
+                            <label for="edit-form-title" class="col-form-label">Titre</label>
+                            <input id="edit-form-title" type="text" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-description" class="col-form-label">Description</label>
+                            <textarea id="edit-form-description" class="form-control"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-category" class="col-form-label">Catégorie</label>
+                            <select id="edit-form-category" class="form-select" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-assignees" class="col-form-label">Destinataires</label>
+                            <input id="edit-form-assignees" type="text" style="display: none" disabled>
+                            <h5 id="edit-form-assignees-preview"></h5>
+                            <div class="dropdown dropend">
+                                <button
+                                    id="edit-form-assignees-add"
+                                    class="btn btn-primary dropdown-toggle"
+                                    data-bs-toggle="dropdown"
+                                >
+                                    Ajouter
+                                </button>
+                                <ul id="edit-form-assignees-dropdown" class="dropdown-menu"></ul>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-date" class="col-form-label">Date de début</label>
+                            <input
+                                id="edit-form-date"
+                                type="date"
+                                class="form-control"
+                                value="${new Date().toLocaleDateString('en-CA')}"
+                                required
+                            >
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-form-status" class="col-form-label">Statut</label>
+                            <select id="edit-form-status" class="form-select" required>
+                                ${CONSTANTS['TASK_STATUS'] ?
+                                    CONSTANTS['TASK_STATUS'].map((status, index) =>
+                                        `<option value="${index}">${status}</option>`
+                                    ).join('\n') : ''}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button id="edit-modal-submit" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </div>
+        </div>
+    </div>`
+);
+
+const buildTaskFilterModal = () => $(
+    `<div id="filter-modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title text-truncate fs-5">Filtres</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -505,7 +714,7 @@ const buildTaskFilterModal = () => $(
                             <input id="filter-form-category" type="text" class="form-control" placeholder="Aucun filtre">
                         </div>
                         <div class="mb-3">
-                            <label for="edit-form-assignees" class="col-form-label">Destinataires</label>
+                            <label for="filter-form-assignees" class="col-form-label">Destinataires</label>
                             <select id="filter-form-assignees" class="form-select mb-2">
                                 <option value="-1" selected>Tous</option>
                                 <option value="0">Incluant moi</option>

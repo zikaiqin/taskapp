@@ -55,6 +55,16 @@
     margin: 0 16px 0 16px;
 }
 
+#edit-form-assignees-dropdown {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.username-label {
+    padding-right: 6px;
+    margin-right: 6px;
+}
+
 ::-webkit-datetime-edit-month-field { cursor: text; }
 ::-webkit-datetime-edit-day-field { cursor: text; }
 ::-webkit-datetime-edit-year-field { cursor: text; }

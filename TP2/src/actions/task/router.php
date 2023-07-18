@@ -14,6 +14,7 @@ use Database;
 use Globals;
 use function Assignee\assign as assign_to;
 use function Assignee\fetch_all as fetch_assignees;
+use function Assignee\get_by_task as get_assignees_by_task;
 use function Assignee\verify as verify_assignees;
 use function Category\get_by_id as get_category_by_id;
 use function Request\require_methods;
@@ -70,6 +71,7 @@ class Router {
                 # Must send 'categoryID', 'title', 'startDate', 'status' and 'assignees' as form-data
                 if (!require_values(
                     $title = $_POST['title'],
+                    $category_id = $_POST['categoryID'],
                     $raw_date = $_POST['startDate'],
                     $status = $_POST['status'],
                     $assign_json = $_POST['assignees'],
@@ -104,8 +106,7 @@ class Router {
                 }
 
                 # Category must exist
-                $category_id = $_POST['categoryID'] === '' ? null : $_POST['categoryID'];
-                if (isset($_POST['categoryID']) && get_category_by_id($category_id, Database::get()) === false) {
+                if (get_category_by_id($category_id, Database::get()) === false) {
                     http_response_code(400);
                     echo 'Category does not exist';
                     die();
@@ -202,9 +203,16 @@ class Router {
                     $row['Status'] === $status &&
                     $row['Description'] === ($_POST['description'] ?? '')
                 ) {
-                    http_response_code(200);
-                    echo assign_to($task_id, Database::get(), $assignees) === 0 ? 'No changes' : 'Task modified';
-                    exit();
+                    $current_assignees = array_map(
+                        fn($r) => $r['Username'],
+                        get_assignees_by_task($task_id, Database::get()),
+                    );
+                    if (count(array_diff($current_assignees, $assignees)) ===
+                        count(array_diff($assignees, $current_assignees))) {
+                        http_response_code(200);
+                        echo assign_to($task_id, Database::get(), $assignees) === 0 ? 'No changes' : 'Task modified';
+                        exit();
+                    }
                 }
 
                 # Title must not be longer than 64 chars
