@@ -3,6 +3,7 @@ jQuery(() => {
     const state = {
         context: 'task',
         tableFilters: {},
+        updates: {},
     }
     buildNav(state);
     $('#profile').one('click', () => {
@@ -11,6 +12,34 @@ jQuery(() => {
     $('#logout').on('click', () => {
         logout();
     });
+    const INTERVAL = 4000;
+    state.pinger = setInterval(() => {
+        if (state.lock || state.busy) return;
+        state.busy = true;
+        $.ajax('api/update', {
+            type: 'GET',
+            success: (res) => {
+                const next = {};
+                Array.from(res).forEach(({type, time, data}) => {
+                    next[type] = {time, data}
+                });
+                if (state.skipNext) {
+                    state.updates = next;
+                    state.skipNext = false;
+                    state.busy = false;
+                    return;
+                }
+                const rebuild = Array.from(res)
+                    .some(({type, time, data}) => type === state.context && time > state.updates[type]?.time);
+                state.updates = next;
+                if (rebuild) rebuildTable(state).then(
+                    () => { state.busy = false; }
+                );
+                state.busy = false;
+            },
+            error: () => { state.busy = false; },
+        });
+    }, INTERVAL)
     buildTaskTable(state).then(() => {
         $('body').show();
     })
@@ -66,6 +95,7 @@ const buildNav = (state) => {
             return;
         }
         state.lock = true;
+        state.skipNext = true;
         state.context = context;
         let siblings = $(this).parent().siblings().find('a');
         siblings.removeClass('active').prop('disabled', true);
@@ -101,7 +131,7 @@ const buildUserTable = async (state) => {
         error: () => { void 0; },
         success: (res) => {
             state.tableData = Array.from(res);
-            let modal = setupUserEditModal();
+            let modal = setupUserEditModal(state);
             let table = buildTableFrame();
             let header = $(
                 `<tr>
@@ -117,7 +147,7 @@ const buildUserTable = async (state) => {
         },
     });
 };
-const setupUserEditModal = () => {
+const setupUserEditModal = (state) => {
     let modalQuery = buildUserEditModal();
     $('#modal-container').append(modalQuery);
     let modal = new bootstrap.Modal(modalQuery[0])
@@ -167,6 +197,8 @@ const setupUserEditModal = () => {
             },
             success: () => {
                 modal.hide();
+                state.skipNext = true;
+                rebuildTable(state);
             },
         });
     });
@@ -259,6 +291,10 @@ const buildCategoryRows = (state, table, deleteModal, editModal) => {
                 $.ajax('api/category/delete', {
                     type: 'POST',
                     data: { categoryID },
+                    success: () => {
+                        state.skipNext = true;
+                        rebuildTable(state);
+                    },
                 });
             });
         });
@@ -307,6 +343,8 @@ const setupCategoryEditModal = (state) => {
             },
             success: () => {
                 modal.hide();
+                state.skipNext = true;
+                rebuildTable(state);
             },
         });
     });
@@ -416,6 +454,10 @@ const buildTaskRows = (state, table, deleteModal, editModal) => {
                 $.ajax('api/task/delete', {
                     type: 'POST',
                     data: { taskID },
+                    success: () => {
+                        state.skipNext = true;
+                        rebuildTable(state);
+                    },
                 });
             });
         });
@@ -559,6 +601,8 @@ const setupTaskEditModal = (state) => {
             },
             success: () => {
                 modal.hide();
+                state.skipNext = true;
+                rebuildTable(state);
             },
         });
     });
