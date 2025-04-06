@@ -14,7 +14,7 @@ class Database {
         }
         $db_conf = json_decode($configs, true)['database'];
 
-        $dsn = 'mysql:host=' . $db_conf['host'] . ';dbname=' . $db_conf['schema'];
+        $dsn = $db_conf['driver'] . ':host=' . $db_conf['host'] . ';dbname=' . $db_conf['schema'];
         $options = [
             PDO::ATTR_EMULATE_PREPARES   => false,
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
