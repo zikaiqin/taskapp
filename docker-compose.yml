@@ -1,0 +1,14 @@
+services:
+  web:
+    image: taskapp-web
+    build:
+      context: ./src
+    env_file:
+      - ".env"
+    ports:
+      - "80:80"
+    networks:
+      - web
+
+networks: 
+  web:

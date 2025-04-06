@@ -6,22 +6,20 @@ class Database {
     private PDO $pdo;
 
     private function __construct() {
-        # Read host, user, pwd and schema from '/config.json'
-        $fp = dirname(__DIR__) . '/config.json';
-        $configs = file_get_contents($fp);
-        if (!$configs) {
-            throw new Exception('Missing configs for database');
+        $dsn = getenv('DB_CONN');
+        $username = getenv('DB_USER');
+        $password = getenv('DB_PWD');
+        if (empty($dsn) || empty($username) || empty($password)) {
+            throw new Exception('Database connection details are not set in environment variables.');
         }
-        $db_conf = json_decode($configs, true)['database'];
 
-        $dsn = $db_conf['driver'] . ':host=' . $db_conf['host'] . ';dbname=' . $db_conf['schema'];
         $options = [
             PDO::ATTR_EMULATE_PREPARES   => false,
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ];
         try {
-            $this->pdo = new PDO($dsn, $db_conf['user'], $db_conf['password'], $options);
+            $this->pdo = new PDO($dsn, $username, $password, $options);
         } catch (Exception $e) {
             throw new Exception('Database error:\n' . $e->getMessage());
         }
