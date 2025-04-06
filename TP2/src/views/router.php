@@ -53,9 +53,9 @@ class Router {
                 $fdir = __DIR__ . "/$fname";
 
                 # Raw string of requested HTML file
-                $html = file_get_contents("$fdir/$fname.html");
+                $html = file_get_contents("$fdir/index.html");
                 if (!$html) {
-                    throw new Exception("File not found at $fdir/$fname.html");
+                    throw new Exception("File not found at $fdir/index.html");
                 }
 
                 # Constants needed to communicate with back-end
