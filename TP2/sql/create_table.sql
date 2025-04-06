@@ -2,13 +2,13 @@ CREATE TABLE Users(
     Username VARCHAR(255) PRIMARY KEY,
     Email VARCHAR(255) UNIQUE NOT NULL,
     Password VARCHAR(255) NOT NULL,
-    Privilege TINYINT(8) NOT NULL
+    Privilege SMALLINT NOT NULL
 );
 
 CREATE TABLE Sessions(
     SessionID VARCHAR(128) PRIMARY KEY,
     Username VARCHAR(255) UNIQUE NOT NULL,
-    Time INT(32) NOT NULL
+    Time INT NOT NULL
 );
 
 CREATE TABLE Categories(
@@ -24,7 +24,7 @@ CREATE TABLE Tasks(
     Title VARCHAR(64) NOT NULL,
     Description TEXT NOT NULL,
     StartDate DATE NOT NULL,
-    Status TINYINT(8) NOT NULL,
+    Status SMALLINT NOT NULL,
     FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID) ON DELETE SET NULL,
     FOREIGN KEY (CreatorName) REFERENCES Users(Username) ON DELETE SET NULL
 );
@@ -38,7 +38,7 @@ CREATE TABLE Assignees(
 );
 
 CREATE TABLE Updates(
-    Type TINYINT(8) PRIMARY KEY,
-    Time INT(32) NOT NULL,
+    Type SMALLINT PRIMARY KEY,
+    Time INT NOT NULL,
     Data TEXT
 );
